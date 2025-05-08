@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brave Frontier Heroes ダメージ計算ツール</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Brave Frontier Heroes ダメージ計算ツール</h1>
+
+    <div class="button-group top">
+        <button id="calculateBtn">計算実行</button>
+        <button id="manageProfilesBtn">プロフィール管理</button>
+        <button id="resetFormBtn">フォームリセット</button>
+    </div>
+
+    <h2>入力フォーム</h2>
+    <div class="form-grid" id="inputForm">
+        <!-- ここに .form-group 要素が並びます -->
+        <!-- 例） -->
+        <div class="form-group">
+            <label for="fieldname2">攻撃 (基礎ステ)</label>
+            <input type="number" id="fieldname2" data-field="fieldname2" placeholder="スフィア込み">
+        </div>
+        <!-- 以下、省略 -->
+    </div>
+
+    <div class="button-group bottom">
+        <button id="calculateBtn2">計算実行</button>
+        <button id="manageProfilesBtn2">プロフィール管理</button>
+        <button id="resetFormBtn2">フォームリセット</button>
+    </div>
+
+    <h2>計算結果</h2>
+    <div class="results-grid">
+        <div class="result-item">
+            <strong>攻撃ダメージ (fieldname37):</strong>
+            <span id="result_fieldname37">0</span>
+        </div>
+        <!-- 以下、省略 -->
+    </div>
+</div>
+
+<div id="profileModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="closeModalBtn">&times;</span>
+        <h2>プロフィール管理</h2>
+        <div class="form-group">
+            <label for="profileNameInput">プロフィール名:</label>
+            <input type="text" id="profileNameInput" placeholder="保存する名前を入力">
+        </div>
+        <button id="saveProfileBtn">現在の入力内容を保存/更新</button>
+        
+        <h3 style="margin-top: 20px;">既存のプロフィール</h3>
+        <div class="profile-actions">
+            <select id="profileList"></select>
+            <button id="loadProfileBtn">読込</button>
+            <button id="deleteProfileBtn" style="background-color: #dc3545;">削除</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
