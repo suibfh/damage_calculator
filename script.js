@@ -5,21 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
         initialFormState[input.dataset.field] = input.type === 'checkbox' ? input.checked : input.value;
     });
 
-    // ボタン要素を配列で取得
-    const calculateBtns = [
-        document.getElementById('calculateBtn'),
-        document.getElementById('calculateBtn2')
-    ];
-    const manageProfileBtns = [
-        document.getElementById('manageProfilesBtn'),
-        document.getElementById('manageProfilesBtn2')
-    ];
-    const resetFormBtns = [
-        document.getElementById('resetFormBtn'),
-        document.getElementById('resetFormBtn2')
-    ];
 
-    // モーダル関連要素
+    // --- DOM Elements ---
+    const calculateBtn = document.getElementById('calculateBtn');
+    const manageProfilesBtn = document.getElementById('manageProfilesBtn');
+    const resetFormBtn = document.getElementById('resetFormBtn');
+
     const profileModal = document.getElementById('profileModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const saveProfileBtn = document.getElementById('saveProfileBtn');
@@ -38,11 +29,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const LS_PROFILES_KEY = 'bfhDamageCalcProfiles';
 
-    // ProfileManager定義
+    // --- Utility Functions ---
+    const getNumericValue = (id, defaultValue = 0) => {
+        const val = parseFloat(document.getElementById(id).value);
+        return isNaN(val) ? defaultValue : val;
+    };
+
+    const getSelectValue = (id, defaultValue = 1) => {
+        const val = parseFloat(document.getElementById(id).value);
+        return isNaN(val) ? defaultValue : val;
+    };
+
+
+    // --- Profile Management ---
     const ProfileManager = {
-        loadProfiles: () => JSON.parse(localStorage.getItem(LS_PROFILES_KEY) || '{}'),
+        loadProfiles: () => {
+            const profiles = localStorage.getItem(LS_PROFILES_KEY);
+            return profiles ? JSON.parse(profiles) : {};
+        },
         saveProfile: (name, data) => {
-            if (!name) return alert('プロフィール名を入力してください。'), false;
+            if (!name) {
+                alert('プロフィール名を入力してください。');
+                return false;
+            }
             const profiles = ProfileManager.loadProfiles();
             profiles[name] = data;
             localStorage.setItem(LS_PROFILES_KEY, JSON.stringify(profiles));
@@ -50,57 +59,230 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         },
         deleteProfile: (name) => {
-            if (!name) return alert('削除するプロフィールを選択してください。'), false;
+            if (!name) {
+                alert('削除するプロフィールを選択してください。');
+                return false;
+            }
             if (!confirm(`プロフィール「${name}」を削除してもよろしいですか？`)) return false;
+
             const profiles = ProfileManager.loadProfiles();
             delete profiles[name];
             localStorage.setItem(LS_PROFILES_KEY, JSON.stringify(profiles));
             alert(`プロフィール「${name}」を削除しました。`);
             return true;
         },
-        getProfile: (name) => ProfileManager.loadProfiles()[name]
+        getProfile: (name) => {
+            const profiles = ProfileManager.loadProfiles();
+            return profiles[name];
+        }
     };
 
-    // UIManager定義
+    // --- UI Management ---
     const UIManager = {
+        openProfileModal: () => {
+            profileModal.style.display = 'block';
+            UIManager.populateProfileList();
+            profileNameInput.value = ''; // Clear name input on open
+        },
+        closeProfileModal: () => {
+            profileModal.style.display = 'none';
+        },
         populateProfileList: () => {
             const profiles = ProfileManager.loadProfiles();
             profileListSelect.innerHTML = '<option value="">--- プロフィールを選択 ---</option>';
-            Object.keys(profiles).forEach(name => {
-                const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
-                profileListSelect.appendChild(opt);
+            for (const name in profiles) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                profileListSelect.appendChild(option);
+            }
+        },
+        getFormData: () => {
+            const data = {};
+            allInputFields.forEach(input => {
+                data[input.dataset.field] = input.type === 'number' ? (input.value === '' ? 0 : parseFloat(input.value)) : input.value;
+            });
+            return data;
+        },
+        setFormData: (data) => {
+            allInputFields.forEach(input => {
+                if (data.hasOwnProperty(input.dataset.field)) {
+                     input.value = data[input.dataset.field];
+                }
             });
         },
-        openProfileModal: () => { profileModal.style.display = 'block'; profileNameInput.value = ''; UIManager.populateProfileList(); },
-        closeProfileModal: () => profileModal.style.display = 'none',
-        getFormData: () => allInputFields.reduce((obj, input) => (obj[input.dataset.field] = (input.value === '' ? 0 : (input.type==='number'? parseFloat(input.value):input.value)), obj), {}),
-        setFormData: (data) => allInputFields.forEach(input => { if (data[input.dataset.field]!==undefined) input.value = data[input.dataset.field]; }),
-        displayResults: (res) => Object.entries(res).forEach(([k,v]) => resultElements[k] && (resultElements[k].textContent = typeof v==='number' && !Number.isInteger(v) ? v.toFixed(2) : v)),
-        resetForm: () => { if (confirm('フォームの入力内容を初期状態にリセットしますか？')) { UIManager.setFormData(initialFormState); Calculator.calculateAndDisplay(); }}
+        displayResults: (results) => {
+            for (const key in results) {
+                if (resultElements[key]) {
+                    // 小数点以下が多い場合は丸める（例: 2桁まで）
+                    const value = results[key];
+                    if (typeof value === 'number' && !Number.isInteger(value)) {
+                         resultElements[key].textContent = value.toFixed(2);
+                    } else {
+                         resultElements[key].textContent = value;
+                    }
+                }
+            }
+        },
+        resetForm: () => {
+            if (confirm('フォームの入力内容を初期状態にリセットしますか？（保存されたプロフィールには影響しません）')) {
+                UIManager.setFormData(initialFormState);
+                Calculator.calculateAndDisplay(); // リセット後も再計算して結果を0にする
+            }
+        }
     };
 
-    // Calculator定義
+    // --- Calculation Engine ---
     const Calculator = {
-        calculateAttackDamage: data => { const [f2,f4,f6,f8,f10,f12,f14] = [data.fieldname2||0,data.fieldname4||0,(data.fieldname6||0)/100,(data.fieldname8||0)/100,(data.fieldname10||0)/100,(data.fieldname12||0)/100,(data.fieldname14||100)/100]; const term1=f2*(1+f6-f10); const term2=(f4/2)*(1+f8-f12); return Math.floor(Math.max(Math.floor(term1-term2)*f14,0)); },
-        calculateMagicDamage: data => { const [f3,f5,f7,f9,f11,f13,f15] = [data.fieldname3||0,data.fieldname5||0,(data.fieldname7||0)/100,(data.fieldname9||0)/100,(data.fieldname11||0)/100,(data.fieldname13||0)/100,(data.fieldname15||100)/100]; const term1=f3*(1+f7-f11); const term2=(f5/2)*(1+f9-f13); return Math.floor(Math.max(Math.floor(term1-term2)*f15,0)); },
-        calculateTotalDamage: (data,atk,mag) => { const [f16,f17,f18,f19,f20,f22,f50] = [(data.fieldname16||0)/100,(data.fieldname17||0)/100,(data.fieldname18||0)/100,(data.fieldname19||0)/100,data.fieldname20||0,parseFloat(data.fieldname22)||1,(data.fieldname50||0)/100]; let m=(atk+mag)*(f22+f18-f17); m*=1-f16; m*=1+f19-f50; const base=Math.floor(m); return Math.floor(base*(100+f20)/100); },
-        calculateHpThreshold: (total,data) => { const f29=data.fieldname29||30; return f29===100?Infinity:Math.round(total/(100-f29)*100); },
-        calculateDamagePercentage: (total,data) => data.fieldname41? (total/data.fieldname41)*100 : 0,
-        calculateAll: () => { const d=UIManager.getFormData(); const atk=Calculator.calculateAttackDamage(d); const mag=Calculator.calculateMagicDamage(d); const tot=Calculator.calculateTotalDamage(d,atk,mag); return {fieldname37:atk,fieldname38:mag,fieldname1:tot,fieldname30:Calculator.calculateHpThreshold(tot,d),fieldname42:Calculator.calculateDamagePercentage(tot,d)}; },
-        calculateAndDisplay: () => UIManager.displayResults(Calculator.calculateAll())
+        // fieldname37: 攻撃ダメージ
+        calculateAttackDamage: (data) => {
+            const f2 = data.fieldname2 || 0;
+            const f4 = data.fieldname4 || 0;
+            const f6 = (data.fieldname6 || 0) / 100;
+            const f8 = (data.fieldname8 || 0) / 100;
+            const f10 = (data.fieldname10 || 0) / 100;
+            const f12 = (data.fieldname12 || 0) / 100;
+            const f14 = (data.fieldname14 || 100) / 100;
+
+            const term1 = f2 * (1 + f6 - f10);
+            const term2 = (f4 / 2) * (1 + f8 - f12);
+            const baseDamage = Math.floor(term1 - term2);
+            return Math.floor(Math.max(baseDamage * f14, 0));
+        },
+
+        // fieldname38: 魔攻ダメージ
+        calculateMagicDamage: (data) => {
+            const f3 = data.fieldname3 || 0;
+            const f5 = data.fieldname5 || 0;
+            const f7 = (data.fieldname7 || 0) / 100;
+            const f9 = (data.fieldname9 || 0) / 100;
+            const f11 = (data.fieldname11 || 0) / 100;
+            const f13 = (data.fieldname13 || 0) / 100;
+            const f15 = (data.fieldname15 || 100) / 100;
+
+            const term1 = f3 * (1 + f7 - f11);
+            const term2 = (f5 / 2) * (1 + f9 - f13);
+            const baseDamage = Math.floor(term1 - term2);
+            return Math.floor(Math.max(baseDamage * f15, 0));
+        },
+
+        // fieldname1: 総合ダメージ
+        calculateTotalDamage: (data, atkDmg, magDmg) => {
+            const f16 = (data.fieldname16 || 0) / 100; // 属性軽減 (スキル・BB) %
+            const f17 = (data.fieldname17 || 0) / 100; // 弱ダメ軽減 %
+            const f18 = (data.fieldname18 || 0) / 100; // 弱ダメアップ %
+            const f19 = (data.fieldname19 || 0) / 100; // 被状態異常ダメアップ %
+            const f20_raw = data.fieldname20 || 0;      // BBダメアップ % (raw value)
+            const f22 = parseFloat(data.fieldname22) || 1;    // 属性相性
+            const f50 = (data.fieldname50 || 0) / 100; // 属性軽減 (特性) %
+
+            const sumOfDamages = atkDmg + magDmg;
+
+            let modifiedDamage = sumOfDamages * (f22 + f18 - f17);
+            modifiedDamage = modifiedDamage * (1 - f16);
+            modifiedDamage = modifiedDamage * (1 + f19 - f50);
+
+            const flooredModifiedDamage = Math.floor(modifiedDamage);
+            const finalTotalDamage = flooredModifiedDamage * (100 + f20_raw) / 100;
+
+            // 総合ダメージは最終的に整数にするのが一般的だと思われるため、floorを適用
+            // もし元の計算式の挙動が小数点以下を保持するなら下の行をコメントアウト/修正
+            return Math.floor(finalTotalDamage);
+        },
+
+        // fieldname30: HP上限目安
+        calculateHpThreshold: (totalDamage, data) => {
+            const f29 = data.fieldname29 || 30; // 全体BB発動HP %
+            if (100 - f29 === 0) return Infinity;
+            const threshold = totalDamage / (100 - f29) * 100;
+            return Math.round(threshold);
+        },
+
+        // fieldname42: ダメージ割合(%)
+        calculateDamagePercentage: (totalDamage, data) => {
+            const f41 = data.fieldname41 || 0; // 最大HP
+            if (f41 === 0) return 0;
+            return (totalDamage / f41) * 100;
+        },
+
+
+        calculateAll: () => {
+            const formData = UIManager.getFormData();
+            const results = {};
+
+            results.fieldname37 = Calculator.calculateAttackDamage(formData);
+            results.fieldname38 = Calculator.calculateMagicDamage(formData);
+            results.fieldname1 = Calculator.calculateTotalDamage(formData, results.fieldname37, results.fieldname38);
+            results.fieldname30 = Calculator.calculateHpThreshold(results.fieldname1, formData);
+            results.fieldname42 = Calculator.calculateDamagePercentage(results.fieldname1, formData);
+
+            return results;
+        },
+
+        calculateAndDisplay: () => {
+            const results = Calculator.calculateAll();
+            UIManager.displayResults(results);
+        }
     };
 
-    // イベントリスナー登録
-    calculateBtns.forEach(b=>b.addEventListener('click',Calculator.calculateAndDisplay));
-    resetFormBtns.forEach(b=>b.addEventListener('click',UIManager.resetForm));
-    manageProfileBtns.forEach(b=>b.addEventListener('click',UIManager.openProfileModal));
-    closeModalBtn.addEventListener('click',UIManager.closeProfileModal);
-    window.addEventListener('click',e=>{ if(e.target===profileModal) UIManager.closeProfileModal(); });
-    saveProfileBtn.addEventListener('click',()=>{ if (ProfileManager.saveProfile(profileNameInput.value.trim(),UIManager.getFormData())) UIManager.populateProfileList(); });
-    loadProfileBtn.addEventListener('click',()=>{ const n=profileListSelect.value; if(n){ const p=ProfileManager.getProfile(n); if(p){ UIManager.setFormData(p); Calculator.calculateAndDisplay(); UIManager.closeProfileModal(); } else alert('読み込み失敗'); } else alert('プロフィール選択'); });
-    deleteProfileBtn.addEventListener('click',()=>{ const n=profileListSelect.value; if(n && ProfileManager.deleteProfile(n)) UIManager.populateProfileList(); else if(!n) alert('プロフィール選択'); });
+    // --- Event Listeners ---
+    calculateBtn.addEventListener('click', Calculator.calculateAndDisplay);
+    resetFormBtn.addEventListener('click', UIManager.resetForm);
 
-    // 初期化
-    UIManager.populateProfileList();
-    Calculator.calculateAndDisplay();
+    manageProfilesBtn.addEventListener('click', UIManager.openProfileModal);
+    closeModalBtn.addEventListener('click', UIManager.closeProfileModal);
+    window.addEventListener('click', (event) => { // Close modal if clicked outside
+        if (event.target == profileModal) {
+            UIManager.closeProfileModal();
+        }
+    });
+
+    saveProfileBtn.addEventListener('click', () => {
+        const name = profileNameInput.value.trim();
+        const data = UIManager.getFormData();
+        if (ProfileManager.saveProfile(name, data)) {
+            UIManager.populateProfileList(); // Refresh list
+            profileNameInput.value = ''; // Clear name input
+        }
+    });
+
+    loadProfileBtn.addEventListener('click', () => {
+        const name = profileListSelect.value;
+        if (name) {
+            const profileData = ProfileManager.getProfile(name);
+            if (profileData) {
+                UIManager.setFormData(profileData);
+                Calculator.calculateAndDisplay(); // Recalculate with loaded data
+                UIManager.closeProfileModal();
+            } else {
+                alert("選択されたプロフィールの読み込みに失敗しました。");
+            }
+        } else {
+            alert('読み込むプロフィールを選択してください。');
+        }
+    });
+
+    deleteProfileBtn.addEventListener('click', () => {
+        const name = profileListSelect.value;
+        if (name) {
+            if (ProfileManager.deleteProfile(name)) {
+                UIManager.populateProfileList(); // Refresh list
+            }
+        } else {
+            alert('削除するプロフィールを選択してください。');
+        }
+    });
+
+    // Add event listeners to all input fields to recalculate on change
+    allInputFields.forEach(input => {
+        input.addEventListener('input', () => {
+            // オプション：入力変更時に即時計算する場合は以下のコメントを解除
+            // Calculator.calculateAndDisplay();
+        });
+    });
+
+
+    // --- Initial Setup ---
+    UIManager.populateProfileList(); // Populate profile list on load
+    Calculator.calculateAndDisplay(); // Initial calculation with default values
 });
