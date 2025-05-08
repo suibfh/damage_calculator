@@ -43,12 +43,6 @@ h1, h2, h3 {
 .button-group {
     margin: 20px 0;
 }
-.button-group.top {
-    /* 上部ボタングループのスタイル調整があれば */
-}
-.button-group.bottom {
-    /* 下部配置ボタンのためのスタイル調整 */
-}
 button {
     padding: 10px 15px;
     background-color: #007bff;
