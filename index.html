@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brave Frontier Heroes ダメージ計算ツール</title>
+    <title>Brave Frontier Heroes ダメージ計算ツール 改</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,116 +11,310 @@
 <div class="container">
     <h1>Brave Frontier Heroes ダメージ計算ツール</h1>
 
-    <div class="button-group">
+    <div class="button-group main-actions">
         <button id="calculateBtn">計算実行</button>
         <button id="manageProfilesBtn">プロフィール管理</button>
         <button id="resetFormBtn">フォームリセット</button>
     </div>
+    <div class="button-group data-actions">
+        <button id="exportDataBtn">現在の入力エクスポート</button>
+        <label for="importDataInput" class="btn-like-label">入力データインポート</label>
+        <input type="file" id="importDataInput" accept=".json" style="display:none;">
+    </div>
+
 
     <h2>入力フォーム</h2>
-    <div class="form-grid">
-        <div class="form-group">
-            <label for="fieldname2">攻撃 (基礎ステ)</label>
-            <input type="number" id="fieldname2" data-field="fieldname2" placeholder="スフィア込み">
-        </div>
-        <div class="form-group">
-            <label for="fieldname3">魔攻 (基礎ステ)</label>
-            <input type="number" id="fieldname3" data-field="fieldname3" placeholder="スフィア込み">
-        </div>
-        <div class="form-group">
-            <label for="fieldname4">防御 (基礎ステ)</label>
-            <input type="number" id="fieldname4" data-field="fieldname4" placeholder="スフィア込み">
-        </div>
-        <div class="form-group">
-            <label for="fieldname5">魔防 (基礎ステ)</label>
-            <input type="number" id="fieldname5" data-field="fieldname5" placeholder="スフィア込み">
-        </div>
-
-        <div class="form-group">
-            <label for="fieldname6">攻撃バフ (%)</label>
-            <input type="number" id="fieldname6" data-field="fieldname6" value="0">
-            <span class="note">例: 30%なら30と入力</span>
-        </div>
-        <div class="form-group">
-            <label for="fieldname7">魔攻バフ (%)</label>
-            <input type="number" id="fieldname7" data-field="fieldname7" value="0">
-        </div>
-        <div class="form-group">
-            <label for="fieldname10">攻撃ダウン (%)</label>
-            <input type="number" id="fieldname10" data-field="fieldname10" value="0" placeholder="例: 怪我なら30">
-        </div>
-        <div class="form-group">
-            <label for="fieldname11">魔攻ダウン (%)</label>
-            <input type="number" id="fieldname11" data-field="fieldname11" value="0" placeholder="例: 雑念なら30">
-        </div>
-
-        <div class="form-group">
-            <label for="fieldname8">防御アップ (%)</label>
-            <input type="number" id="fieldname8" data-field="fieldname8" value="0">
-        </div>
-        <div class="form-group">
-            <label for="fieldname9">魔防アップ (%)</label>
-            <input type="number" id="fieldname9" data-field="fieldname9" value="0">
-        </div>
-        <div class="form-group">
-            <label for="fieldname12">防御ダウン (%)</label>
-            <input type="number" id="fieldname12" data-field="fieldname12" value="0" placeholder="例: 弱体なら30">
-        </div>
-        <div class="form-group">
-            <label for="fieldname13">魔防ダウン (%)</label>
-            <input type="number" id="fieldname13" data-field="fieldname13" value="0" placeholder="例: 虚脱なら30">
-        </div>
-
-        <div class="form-group">
-            <label for="fieldname14">攻撃倍率 (%)</label>
-            <input type="number" id="fieldname14" data-field="fieldname14" value="100">
-            <span class="note">デフォルト100%</span>
-        </div>
-        <div class="form-group">
-            <label for="fieldname15">魔攻倍率 (%)</label>
-            <input type="number" id="fieldname15" data-field="fieldname15" value="100">
-            <span class="note">デフォルト100%</span>
+    <div id="inputForm" class="form-container">
+        <div class="form-section">
+            <h3>基礎ステータス</h3>
+            <div class="form-group">
+                <label for="fieldname2">攻撃 (基礎ステ)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname2" data-field="fieldname2" placeholder="スフィア込み">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname2" data-step="-100">-100</button>
+                        <button class="pm-btn" data-target="fieldname2" data-step="-10">-10</button>
+                        <button class="pm-btn" data-target="fieldname2" data-step="10">+10</button>
+                        <button class="pm-btn" data-target="fieldname2" data-step="100">+100</button>
+                    </div>
+                </div>
+                <span class="note">スフィア込み</span>
+            </div>
+            <div class="form-group">
+                <label for="fieldname3">魔攻 (基礎ステ)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname3" data-field="fieldname3" placeholder="スフィア込み">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname3" data-step="-100">-100</button>
+                        <button class="pm-btn" data-target="fieldname3" data-step="-10">-10</button>
+                        <button class="pm-btn" data-target="fieldname3" data-step="10">+10</button>
+                        <button class="pm-btn" data-target="fieldname3" data-step="100">+100</button>
+                    </div>
+                </div>
+                <span class="note">スフィア込み</span>
+            </div>
+            <div class="form-group">
+                <label for="fieldname4">防御 (基礎ステ)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname4" data-field="fieldname4" placeholder="スフィア込み">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname4" data-step="-100">-100</button>
+                        <button class="pm-btn" data-target="fieldname4" data-step="-10">-10</button>
+                        <button class="pm-btn" data-target="fieldname4" data-step="10">+10</button>
+                        <button class="pm-btn" data-target="fieldname4" data-step="100">+100</button>
+                    </div>
+                </div>
+                <span class="note">スフィア込み</span>
+            </div>
+            <div class="form-group">
+                <label for="fieldname5">魔防 (基礎ステ)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname5" data-field="fieldname5" placeholder="スフィア込み">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname5" data-step="-100">-100</button>
+                        <button class="pm-btn" data-target="fieldname5" data-step="-10">-10</button>
+                        <button class="pm-btn" data-target="fieldname5" data-step="10">+10</button>
+                        <button class="pm-btn" data-target="fieldname5" data-step="100">+100</button>
+                    </div>
+                </div>
+                <span class="note">スフィア込み</span>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="fieldname22">属性相性</label>
-            <select id="fieldname22" data-field="fieldname22">
-                <option value="1">通常 (1.0)</option>
-                <option value="1.3">有利属性 (1.3)</option>
-            </select>
+        <div class="form-section">
+            <h3>バフ・デバフ (%)</h3>
+            <div class="form-group">
+                <label for="fieldname6">攻撃バフ</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname6" data-field="fieldname6" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname6" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname6" data-step="5">+5</button>
+                    </div>
+                </div>
+                <div class="buff-buttons">
+                    <button class="buff-btn" data-target="fieldname6" data-value="0">0</button>
+                    <button class="buff-btn" data-target="fieldname6" data-value="30">30</button>
+                    <button class="buff-btn" data-target="fieldname6" data-value="50">50</button>
+                    <button class="buff-btn" data-target="fieldname6" data-value="100">100</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname7">魔攻バフ</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname7" data-field="fieldname7" value="0">
+                     <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname7" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname7" data-step="5">+5</button>
+                    </div>
+                </div>
+                <div class="buff-buttons">
+                    <button class="buff-btn" data-target="fieldname7" data-value="0">0</button>
+                    <button class="buff-btn" data-target="fieldname7" data-value="30">30</button>
+                    <button class="buff-btn" data-target="fieldname7" data-value="50">50</button>
+                    <button class="buff-btn" data-target="fieldname7" data-value="100">100</button>
+                </div>
+            </div>
+             <div class="form-group">
+                <label for="fieldname10">攻撃ダウン</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname10" data-field="fieldname10" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname10" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname10" data-step="5">+5</button>
+                    </div>
+                </div>
+                 <div class="buff-buttons">
+                    <button class="buff-btn" data-target="fieldname10" data-value="0">0</button>
+                    <button class="buff-btn" data-target="fieldname10" data-value="30">30(怪我)</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname11">魔攻ダウン</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname11" data-field="fieldname11" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname11" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname11" data-step="5">+5</button>
+                    </div>
+                </div>
+                 <div class="buff-buttons">
+                    <button class="buff-btn" data-target="fieldname11" data-value="0">0</button>
+                    <button class="buff-btn" data-target="fieldname11" data-value="30">30(雑念)</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname8">防御アップ</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname8" data-field="fieldname8" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname8" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname8" data-step="5">+5</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname9">魔防アップ</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname9" data-field="fieldname9" value="0">
+                     <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname9" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname9" data-step="5">+5</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname12">防御ダウン</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname12" data-field="fieldname12" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname12" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname12" data-step="5">+5</button>
+                    </div>
+                </div>
+                 <div class="buff-buttons">
+                    <button class="buff-btn" data-target="fieldname12" data-value="0">0</button>
+                    <button class="buff-btn" data-target="fieldname12" data-value="30">30(弱体)</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname13">魔防ダウン</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname13" data-field="fieldname13" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname13" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname13" data-step="5">+5</button>
+                    </div>
+                </div>
+                 <div class="buff-buttons">
+                    <button class="buff-btn" data-target="fieldname13" data-value="0">0</button>
+                    <button class="buff-btn" data-target="fieldname13" data-value="30">30(虚脱)</button>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="fieldname18">弱点属性ダメージアップ (%)</label>
-            <input type="number" id="fieldname18" data-field="fieldname18" value="0">
-        </div>
-        <div class="form-group">
-            <label for="fieldname17">弱点属性ダメージ軽減 (%)</label>
-            <input type="number" id="fieldname17" data-field="fieldname17" value="0">
-        </div>
-        <div class="form-group">
-            <label for="fieldname16">属性軽減 (スキル・BB) (%)</label>
-            <input type="number" id="fieldname16" data-field="fieldname16" value="0">
-        </div>
-         <div class="form-group">
-            <label for="fieldname50">属性軽減 (特性) (%)</label>
-            <input type="number" id="fieldname50" data-field="fieldname50" value="0">
-        </div>
-        <div class="form-group">
-            <label for="fieldname19">被状態異常ダメージアップ (%)</label>
-            <input type="number" id="fieldname19" data-field="fieldname19" value="0" placeholder="0 または 5">
-        </div>
-        <div class="form-group">
-            <label for="fieldname20">BBダメージアップ (%)</label>
-            <input type="number" id="fieldname20" data-field="fieldname20" value="0">
-        </div>
-         <div class="form-group">
-            <label for="fieldname29">全体BB発動HP残量 (%)</label>
-            <input type="number" id="fieldname29" data-field="fieldname29" value="30">
-            <span class="note">デフォルト30% (このHP以下で発動)</span>
-        </div>
-        <div class="form-group">
-            <label for="fieldname41">最大HP (任意)</label>
-            <input type="number" id="fieldname41" data-field="fieldname41" placeholder="ダメージ割合計算用">
+
+        <div class="form-section">
+            <h3>倍率・属性・その他</h3>
+            <div class="form-group">
+                <label for="fieldname14">攻撃倍率 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname14" data-field="fieldname14" value="100">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname14" data-step="-10">-10</button>
+                        <button class="pm-btn" data-target="fieldname14" data-step="10">+10</button>
+                    </div>
+                </div>
+                <span class="note">デフォルト100%</span>
+            </div>
+            <div class="form-group">
+                <label for="fieldname15">魔攻倍率 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname15" data-field="fieldname15" value="100">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname15" data-step="-10">-10</button>
+                        <button class="pm-btn" data-target="fieldname15" data-step="10">+10</button>
+                    </div>
+                </div>
+                <span class="note">デフォルト100%</span>
+            </div>
+
+            <div class="form-group">
+                <label>属性相性</label>
+                <div class="input-wrapper radio-button-group" data-radio-group-field="fieldname22">
+                    <button type="button" class="btn-radio active" data-value="1">通常 (1.0)</button>
+                    <button type="button" class="btn-radio" data-value="1.3">有利 (1.3)</button>
+                </div>
+                <input type="hidden" id="fieldname22" data-field="fieldname22" value="1">
+            </div>
+
+            <div class="form-group">
+                <label for="fieldname18">弱点属性ダメUP (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname18" data-field="fieldname18" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname18" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname18" data-step="5">+5</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname17">弱点属性ダメ軽減 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname17" data-field="fieldname17" value="0">
+                     <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname17" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname17" data-step="5">+5</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname16">属性軽減(スキル) (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname16" data-field="fieldname16" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname16" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname16" data-step="5">+5</button>
+                    </div>
+                </div>
+            </div>
+             <div class="form-group">
+                <label for="fieldname50">属性軽減(特性) (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname50" data-field="fieldname50" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname50" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname50" data-step="5">+5</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname19">被状態異常ダメUP (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname19" data-field="fieldname19" value="0" placeholder="0 or 5">
+                     <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname19" data-step="-1">-1</button>
+                        <button class="pm-btn" data-target="fieldname19" data-step="1">+1</button>
+                    </div>
+                </div>
+                 <div class="buff-buttons">
+                     <button class="buff-btn" data-target="fieldname19" data-value="0">0</button>
+                    <button class="buff-btn" data-target="fieldname19" data-value="5">5</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname20">BBダメージUP (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname20" data-field="fieldname20" value="0">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname20" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname20" data-step="5">+5</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fieldname29">全体BB発動HP残量 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname29" data-field="fieldname29" value="30">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname29" data-step="-5">-5</button>
+                        <button class="pm-btn" data-target="fieldname29" data-step="5">+5</button>
+                    </div>
+                </div>
+                <span class="note">デフォルト30% (このHP以下で発動)</span>
+            </div>
+             <div class="form-group">
+                <label for="fieldname41">最大HP (任意)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="fieldname41" data-field="fieldname41" placeholder="ダメージ割合計算用">
+                    <div class="pm-buttons">
+                        <button class="pm-btn" data-target="fieldname41" data-step="-100">-100</button>
+                        <button class="pm-btn" data-target="fieldname41" data-step="-10">-10</button>
+                        <button class="pm-btn" data-target="fieldname41" data-step="10">+10</button>
+                        <button class="pm-btn" data-target="fieldname41" data-step="100">+100</button>
+                    </div>
+                </div>
+                <span class="note">ダメージ割合計算用</span>
+            </div>
         </div>
     </div>
 
@@ -142,7 +336,7 @@
             <strong>HP上限目安 (全体BB発動用) (fieldname30):</strong>
             <span id="result_fieldname30">0</span>
         </div>
-         <div class="result-item">
+        <div class="result-item">
             <strong>ダメージ割合 (%) (fieldname42):</strong>
             <span id="result_fieldname42">0</span>
         </div>
@@ -153,22 +347,21 @@
     <div class="modal-content">
         <span class="close-button" id="closeModalBtn">&times;</span>
         <h2>プロフィール管理</h2>
-        <div class="form-group">
+        <div class="modal-form-group">
             <label for="profileNameInput">プロフィール名:</label>
             <input type="text" id="profileNameInput" placeholder="保存する名前を入力">
         </div>
         <button id="saveProfileBtn">現在の入力内容を保存/更新</button>
-
+        
         <h3 style="margin-top: 20px;">既存のプロフィール</h3>
         <div class="profile-actions">
             <select id="profileList"></select>
             <button id="loadProfileBtn">読込</button>
-            <button id="deleteProfileBtn" style="background-color: #dc3545;">削除</button>
+            <button id="deleteProfileBtn" class="danger-btn">削除</button>
         </div>
     </div>
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
