@@ -35,18 +35,18 @@ h3 { font-size: 1.1em; margin-bottom: 10px; color: #4b4f56;}
 }
 .button-group.results-actions { /* Style for buttons above results */
     justify-content: center;
-    margin-top: 20px; /* Add some space above */
+    margin-top: 20px; 
 }
 
 
-button, .btn-like-label { /* .btn-like-label was for import, can be removed if not used elsewhere */
-    padding: 8px 12px; /* サイズ調整 */
+button, .btn-like-label {
+    padding: 8px 12px; 
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9em; /* サイズ調整 */
+    font-size: 0.9em; 
     transition: background-color 0.2s ease;
 }
 button:hover {
@@ -75,31 +75,31 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 
 .form-group {
     display: flex;
-    flex-direction: column; /* ラベルと入力エリアを縦に */
-    margin-bottom: 12px; /* 間隔調整 */
+    flex-direction: column; 
+    margin-bottom: 12px; 
 }
 
 .form-group label {
-    margin-bottom: 4px; /* 間隔調整 */
+    margin-bottom: 4px; 
     font-weight: bold;
-    font-size: 0.85em; /* サイズ調整 */
+    font-size: 0.85em; 
     color: #333;
 }
 
 .input-wrapper {
-    display: flex; /* inputとpm-buttonsを横並びに */
+    display: flex; 
     align-items: center;
 }
 
 .form-group input[type="number"],
-.form-group select { /* select may no longer be used */
-    padding: 6px 8px; /* サイズ調整 */
+.form-group select { 
+    padding: 6px 8px; 
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
-    font-size: 0.9em; /* サイズ調整 */
-    flex-grow: 1; /* inputが可能な限り幅を取る */
-    min-width: 60px; /* 最小幅確保 */
+    font-size: 0.9em; 
+    flex-grow: 1; 
+    min-width: 60px; 
 }
 .form-group input[type="number"]:focus,
 .form-group select:focus {
@@ -113,9 +113,9 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
     margin-left: 5px;
 }
 .pm-buttons .pm-btn {
-    padding: 4px 6px; /* サイズ調整 */
-    font-size: 0.8em; /* サイズ調整 */
-    min-width: 40px; /* Adjusted for larger step values like -1000 */
+    padding: 4px 6px; 
+    font-size: 0.8em; 
+    min-width: 40px; 
     margin-left: 3px;
     background-color: #6c757d;
 }
@@ -137,7 +137,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 .buff-buttons .buff-btn:hover {
     background-color: #117a8b;
 }
-.buff-buttons .buff-btn.active { /* JavaScriptで制御 */
+.buff-buttons .buff-btn.active { 
     background-color: #0056b3;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
 }
@@ -146,11 +146,11 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 .radio-button-group {
     display: flex;
     gap: 5px;
-    margin-top: 5px; /* Align with buff-buttons if label is above input-wrapper */
+    margin-top: 5px; 
 }
 .radio-button-group .btn-radio {
-    padding: 6px 10px; /* サイズ調整 */
-    font-size: 0.85em; /* サイズ調整 */
+    padding: 6px 10px; 
+    font-size: 0.85em; 
     background-color: #e9ecef;
     color: #495057;
     border: 1px solid #ced4da;
@@ -175,7 +175,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
-    margin-top: 10px; /* Reduced margin as buttons are now above */
+    margin-top: 10px; 
 }
 .result-item {
     background-color: #e9ecef;
