@@ -33,9 +33,13 @@ h3 { font-size: 1.1em; margin-bottom: 10px; color: #4b4f56;}
 .button-group.main-actions {
     justify-content: center;
 }
+.button-group.results-actions { /* Style for buttons above results */
+    justify-content: center;
+    margin-top: 20px; /* Add some space above */
+}
 
 
-button, .btn-like-label {
+button, .btn-like-label { /* .btn-like-label was for import, can be removed if not used elsewhere */
     padding: 8px 12px; /* サイズ調整 */
     background-color: #007bff;
     color: white;
@@ -45,7 +49,7 @@ button, .btn-like-label {
     font-size: 0.9em; /* サイズ調整 */
     transition: background-color 0.2s ease;
 }
-button:hover, .btn-like-label:hover {
+button:hover {
     background-color: #0056b3;
 }
 button.danger-btn, button#deleteProfileBtn {
@@ -53,10 +57,6 @@ button.danger-btn, button#deleteProfileBtn {
 }
 button.danger-btn:hover, button#deleteProfileBtn:hover {
     background-color: #c82333;
-}
-.btn-like-label {
-    display: inline-block;
-    text-align: center;
 }
 
 
@@ -92,7 +92,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 }
 
 .form-group input[type="number"],
-.form-group select {
+.form-group select { /* select may no longer be used */
     padding: 6px 8px; /* サイズ調整 */
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -115,7 +115,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 .pm-buttons .pm-btn {
     padding: 4px 6px; /* サイズ調整 */
     font-size: 0.8em; /* サイズ調整 */
-    min-width: 30px;
+    min-width: 40px; /* Adjusted for larger step values like -1000 */
     margin-left: 3px;
     background-color: #6c757d;
 }
@@ -146,6 +146,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 .radio-button-group {
     display: flex;
     gap: 5px;
+    margin-top: 5px; /* Align with buff-buttons if label is above input-wrapper */
 }
 .radio-button-group .btn-radio {
     padding: 6px 10px; /* サイズ調整 */
@@ -174,7 +175,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
-    margin-top: 20px;
+    margin-top: 10px; /* Reduced margin as buttons are now above */
 }
 .result-item {
     background-color: #e9ecef;
