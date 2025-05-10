@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const LS_PROFILES_KEY = 'bfhDamageCalcProfiles_v2';
-    const LS_AUTO_SAVE_KEY = 'bfhDamageCalcFormState_v2';
+    const LS_PROFILES_KEY = 'bfhDamageCalcProfiles_v2'; // Keep this for profile management
+    const LS_AUTO_SAVE_KEY = 'bfhDamageCalcFormState_v2'; // Keep this for auto-save
     let initialFormState = {};
 
     const UIManager = {
@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.captureInitialFormState();
             this.loadFormState(); // Load auto-saved state first
             this.setupEventListeners();
-            this.updateAllRadioGroupVisuals();
-            this.updateAllBuffButtonVisuals();
+            this.updateAllRadioGroupVisuals(); // Ensure radio buttons reflect loaded/initial state
+            this.updateAllBuffButtonVisuals(); // Ensure buff buttons reflect loaded/initial state
             Calculator.calculateAndDisplay(); // Initial calculation
         },
 
@@ -30,9 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.allInputFields.forEach(input => {
                 const fieldName = input.dataset.field;
                 if (input.type === 'hidden' && input.closest('.radio-button-group')) {
-                    // For radio groups, find the initially active button if any, or use hidden input's value
                     const group = input.closest('.radio-button-group');
-                    const activeButton = group.querySelector('.btn-radio.active');
+                    const activeButton = group.querySelector('.btn-radio.active'); // Check HTML for initial active
                     initialFormState[fieldName] = activeButton ? activeButton.dataset.value : input.value;
                 } else {
                     initialFormState[fieldName] = input.value;
@@ -41,17 +40,33 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         setupEventListeners() {
-            document.getElementById('calculateBtn').addEventListener('click', () => Calculator.calculateAndDisplay());
-            document.getElementById('resetFormBtn').addEventListener('click', () => this.resetForm());
-            document.getElementById('manageProfilesBtn').addEventListener('click', () => this.openProfileModal());
-            document.getElementById('closeModalBtn').addEventListener('click', () => this.closeProfileModal());
+            // Main action buttons (calculate, manage profiles, reset form)
+            document.querySelectorAll('.js-action-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const action = e.target.dataset.action;
+                    switch(action) {
+                        case 'calculate':
+                            Calculator.calculateAndDisplay();
+                            break;
+                        case 'manageProfiles':
+                            this.openProfileModal();
+                            break;
+                        case 'resetForm':
+                            this.resetForm();
+                            break;
+                        case 'closeProfileModal': // Added for the modal's close button
+                            this.closeProfileModal();
+                            break;
+                    }
+                });
+            });
+            
+            // Profile modal specific buttons (Save, Load, Delete)
             document.getElementById('saveProfileBtn').addEventListener('click', () => ProfileManager.handleSaveProfile());
             document.getElementById('loadProfileBtn').addEventListener('click', () => ProfileManager.handleLoadProfile());
             document.getElementById('deleteProfileBtn').addEventListener('click', () => ProfileManager.handleDeleteProfile());
             
-            document.getElementById('exportDataBtn').addEventListener('click', () => this.exportData());
-            document.getElementById('importDataInput').addEventListener('change', (e) => this.importData(e));
-
+            // Close modal if backdrop is clicked
             window.addEventListener('click', (event) => {
                 if (event.target === document.getElementById('profileModal')) {
                     this.closeProfileModal();
@@ -71,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.radio-button-group .btn-radio').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const group = e.target.closest('.radio-button-group');
-                    const targetField = group.dataset.radioGroupField;
+                    const targetField = group.dataset.radioGroupField; // This should be the ID of the hidden input
                     const value = e.target.dataset.value;
                     this.handleRadioSelection(targetField, value, group);
                 });
@@ -88,32 +103,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Auto-save on input change
             this.allInputFields.forEach(input => {
-                input.addEventListener('change', () => this.saveCurrentFormState()); // 'change' is better than 'input' for perf
-                input.addEventListener('input', () => { // For number fields that might not fire 'change' on +/-
-                    if (input.type === 'number') this.saveCurrentFormStateDebounced();
-                });
+                // For type=hidden (radio button groups), change is triggered programmatically by handleRadioSelection
+                // For type=number, 'change' or 'input'
+                input.addEventListener('change', () => this.saveCurrentFormState());
+                if (input.type === 'number') {
+                    input.addEventListener('input', () => this.saveCurrentFormStateDebounced());
+                }
             });
         },
 
         handleNumberButtonClick(fieldId, step) {
             const inputElement = document.getElementById(fieldId);
-            if (inputElement) {
+            if (inputElement && inputElement.type === 'number') { // Ensure it's a number input
                 let currentValue = parseFloat(inputElement.value) || 0;
                 inputElement.value = currentValue + step;
-                this.saveCurrentFormState();
-                 this.updateBuffButtonVisuals(fieldId); // Update buff buttons if they control this field
+                this.saveCurrentFormState(); // Auto-save
+                this.updateBuffButtonVisuals(fieldId); // Update buff buttons if they control this field
+                Calculator.calculateAndDisplay(); // Optional: recalculate on change
             }
         },
         
         handleRadioSelection(fieldId, value, groupElement) {
-            const hiddenInput = document.getElementById(fieldId);
+            const hiddenInput = document.getElementById(fieldId); // fieldId is the ID of the hidden input
             if (hiddenInput) {
                 hiddenInput.value = value;
-                // Update visual state of buttons in the group
                 groupElement.querySelectorAll('.btn-radio').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.value === value);
                 });
-                this.saveCurrentFormState();
+                this.saveCurrentFormState(); // Auto-save
+                Calculator.calculateAndDisplay(); // Optional: recalculate on change
             }
         },
 
@@ -122,52 +140,55 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inputElement) {
                 inputElement.value = value;
                 this.updateBuffButtonVisuals(fieldId);
-                this.saveCurrentFormState();
+                this.saveCurrentFormState(); // Auto-save
+                Calculator.calculateAndDisplay(); // Optional: recalculate on change
             }
         },
         
-        updateRadioGroupVisuals(fieldId) {
-            const hiddenInput = document.getElementById(fieldId);
-            if (hiddenInput && hiddenInput.closest('.radio-button-group')) {
-                 const group = hiddenInput.closest('.radio-button-group');
-                 const currentValue = hiddenInput.value;
-                 group.querySelectorAll('.btn-radio').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.value === currentValue);
-                });
-            } else { // New structure with data-radio-group-field
-                const group = document.querySelector(`.radio-button-group[data-radio-group-field="${fieldId}"]`);
-                if (group) {
-                    const hiddenActualInput = document.getElementById(fieldId); // This is the hidden input
-                    if (hiddenActualInput) {
-                        const currentValue = hiddenActualInput.value;
-                         group.querySelectorAll('.btn-radio').forEach(btn => {
-                            btn.classList.toggle('active', btn.dataset.value === currentValue);
-                        });
-                    }
-                }
+        updateRadioGroupVisuals(fieldIdOfHiddenInput) {
+            const hiddenInput = document.getElementById(fieldIdOfHiddenInput);
+            if (hiddenInput && hiddenInput.type === 'hidden') {
+                 const group = hiddenInput.closest('.form-group')?.querySelector(`.radio-button-group[data-radio-group-field="${fieldIdOfHiddenInput}"]`);
+                 if (group) {
+                    const currentValue = hiddenInput.value;
+                    group.querySelectorAll('.btn-radio').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.value === currentValue);
+                    });
+                 }
             }
         },
 
         updateAllRadioGroupVisuals() {
-            document.querySelectorAll('.radio-button-group[data-radio-group-field]').forEach(group => {
-                this.updateRadioGroupVisuals(group.dataset.radioGroupField);
+            document.querySelectorAll('input[type="hidden"][data-field]').forEach(hiddenInput => {
+                if (hiddenInput.closest('.form-group')?.querySelector(`.radio-button-group[data-radio-group-field="${hiddenInput.id}"]`)) {
+                    this.updateRadioGroupVisuals(hiddenInput.id);
+                }
             });
         },
 
         updateBuffButtonVisuals(fieldId) {
             const inputElement = document.getElementById(fieldId);
-            const buffButtonGroup = inputElement.closest('.form-group').querySelector('.buff-buttons');
+            // Find the buff buttons associated with this input field
+            // This assumes buff buttons are in a .buff-buttons div within the same .form-group or a sibling structure.
+            // A more robust way might be to add a data-controls-buffs attribute to the input.
+            // For now, let's assume they are siblings or children within the form-group.
+            const formGroup = inputElement.closest('.form-group');
+            if (!formGroup) return;
+
+            const buffButtonGroup = formGroup.querySelector('.buff-buttons');
             if (inputElement && buffButtonGroup) {
                 const currentValue = inputElement.value;
                 buffButtonGroup.querySelectorAll('.buff-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.value === currentValue);
+                    btn.classList.toggle('active', btn.dataset.value === currentValue && btn.dataset.target === fieldId);
                 });
             }
         },
         
         updateAllBuffButtonVisuals() {
             this.allInputFields.forEach(input => {
-                this.updateBuffButtonVisuals(input.id);
+                if (input.type === 'number') { // Typically, buff buttons control number inputs
+                     this.updateBuffButtonVisuals(input.id);
+                }
             });
         },
 
@@ -175,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = {};
             this.allInputFields.forEach(input => {
                 const fieldName = input.dataset.field;
-                data[fieldName] = (input.type === 'number' && input.value === '') ? '0' : input.value; // Store as string for consistency with localStorage
+                data[fieldName] = (input.type === 'number' && input.value === '') ? '0' : input.value;
             });
             return data;
         },
@@ -185,12 +206,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fieldName = input.dataset.field;
                 if (data.hasOwnProperty(fieldName)) {
                     input.value = data[fieldName];
-                    // If it's part of a radio group or buff group, update visuals
-                    this.updateRadioGroupVisuals(fieldName);
-                    this.updateBuffButtonVisuals(fieldName);
+                    this.updateRadioGroupVisuals(fieldName); // Works if fieldName is the id of the hidden input
+                    this.updateBuffButtonVisuals(fieldName);  // Works if fieldName is the id of the number input
                 }
             });
-            this.saveCurrentFormState(); // Save after setting, e.g. after import or profile load
+            // No explicit saveCurrentFormState here, as it might trigger loops if called from loadFormState.
+            // Let individual handlers or loadFormState decide when to save.
         },
 
         displayResults(results) {
@@ -205,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             displayValue = value.toFixed(2);
                         } 
                         else {
-                             displayValue = Math.floor(value); // Default to floor for most damage numbers
+                             displayValue = Math.floor(value);
                         }
                     } else {
                          displayValue = value;
@@ -216,11 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         resetForm() {
-            if (confirm('フォームの入力内容を初期状態にリセットしますか？（保存されたプロフィールや自動保存内容には影響しません）')) {
+            if (confirm('フォームの入力内容を初期状態にリセットしますか？（自動保存された内容は上書きされます）')) {
                 this.setFormData(initialFormState);
+                this.saveCurrentFormState(); // Save the reset state
                 Calculator.calculateAndDisplay();
-                // Explicitly clear auto-save as well if desired, or leave it to be overwritten on next input
-                // localStorage.removeItem(LS_AUTO_SAVE_KEY); 
             }
         },
 
@@ -235,78 +255,37 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         saveCurrentFormState() {
-            // console.log("Saving form state to localStorage");
             const formData = this.getFormData();
             localStorage.setItem(LS_AUTO_SAVE_KEY, JSON.stringify(formData));
         },
         
-        // Debounced save function
         _saveTimeout: null,
         saveCurrentFormStateDebounced() {
             clearTimeout(this._saveTimeout);
             this._saveTimeout = setTimeout(() => {
                 this.saveCurrentFormState();
-            }, 500); // Adjust debounce delay as needed (e.g., 500ms)
+            }, 300); // Reduced debounce for quicker save on number input
         },
 
         loadFormState() {
             const savedState = localStorage.getItem(LS_AUTO_SAVE_KEY);
             if (savedState) {
-                // console.log("Loading form state from localStorage");
                 try {
                     const formData = JSON.parse(savedState);
                     this.setFormData(formData);
                 } catch (e) {
                     console.error("Error parsing auto-saved state from localStorage:", e);
-                    localStorage.removeItem(LS_AUTO_SAVE_KEY); // Clear corrupted data
+                    localStorage.removeItem(LS_AUTO_SAVE_KEY);
+                    this.setFormData(initialFormState); // Fallback to initial state
                 }
             } else {
-                // If no auto-saved state, ensure form is set to initial (already done by captureInitialFormState if no load)
-                 this.setFormData(initialFormState); // Ensure initial state is applied and visuals updated
+                 this.setFormData(initialFormState); // Apply initial state if nothing saved
             }
-        },
-
-        exportData() {
-            const data = localStorage.getItem(LS_AUTO_SAVE_KEY);
-            if (!data) {
-                alert('エクスポートするデータがありません。');
-                return;
-            }
-            const filename = `bfh_calc_data_${new Date().toISOString().slice(0,10)}.json`;
-            const blob = new Blob([data], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert('現在の入力内容をエクスポートしました。');
-        },
-
-        importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const jsonData = e.target.result;
-                    JSON.parse(jsonData); // Validate JSON
-                    localStorage.setItem(LS_AUTO_SAVE_KEY, jsonData);
-                    this.loadFormState(); // Reloads and sets form data
-                    Calculator.calculateAndDisplay();
-                    alert('データをインポートし、フォームに適用しました。');
-                } catch (err) {
-                    alert('無効なファイル形式です。JSONファイルを選択してください。');
-                    console.error("Import error:", err);
-                } finally {
-                    event.target.value = null; // Reset file input
-                }
-            };
-            reader.readAsText(file);
+             // After setting data (either saved or initial), ensure visual states are correct.
+            this.updateAllRadioGroupVisuals();
+            this.updateAllBuffButtonVisuals();
         }
+        // Export/Import functions removed
     };
 
     const ProfileManager = {
@@ -350,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         handleSaveProfile: () => {
             const name = ProfileManager.profileNameInput.value.trim();
-            const currentFormData = UIManager.getFormData(); // Use current form state, not auto-saved
+            const currentFormData = UIManager.getFormData();
             if (ProfileManager.saveToProfiles(name, currentFormData)) {
                 alert(`プロフィール「${name}」を保存しました。`);
                 ProfileManager.populateProfileList();
@@ -363,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const profileData = ProfileManager.getFromProfiles(name);
                 if (profileData) {
                     UIManager.setFormData(profileData);
+                    UIManager.saveCurrentFormState(); // Also update auto-save with loaded profile
                     Calculator.calculateAndDisplay();
                     UIManager.closeProfileModal();
                     alert(`プロフィール「${name}」を読み込みました。`);
@@ -391,76 +371,74 @@ document.addEventListener('DOMContentLoaded', () => {
     const Calculator = {
         getNumericValue(data, fieldName, defaultValue = 0) {
             const valStr = data[fieldName];
-            if (valStr === undefined || valStr === null || valStr.trim() === '') return defaultValue;
+            if (valStr === undefined || valStr === null || String(valStr).trim() === '') return defaultValue;
             const val = parseFloat(valStr);
             return isNaN(val) ? defaultValue : val;
         },
 
         calculateAttackDamage: (data) => {
-            const f2 = Calculator.getNumericValue(data, 'fieldname2');    // 攻撃 (基礎ステ)
-            const f4 = Calculator.getNumericValue(data, 'fieldname4');    // 防御 (基礎ステ)
-            const f6 = Calculator.getNumericValue(data, 'fieldname6') / 100;  // 攻撃バフ (%)
-            const f8 = Calculator.getNumericValue(data, 'fieldname8') / 100;  // 防御アップ (%)
-            const f10 = Calculator.getNumericValue(data, 'fieldname10') / 100; // 攻撃ダウン (%)
-            const f12 = Calculator.getNumericValue(data, 'fieldname12') / 100; // 防御ダウン (%)
-            const f14 = Calculator.getNumericValue(data, 'fieldname14', 100) / 100; // 攻撃倍率 (%)
+            const f2 = Calculator.getNumericValue(data, 'fieldname2');
+            const f4 = Calculator.getNumericValue(data, 'fieldname4');
+            const f6 = Calculator.getNumericValue(data, 'fieldname6') / 100;
+            const f8 = Calculator.getNumericValue(data, 'fieldname8') / 100;
+            const f10 = Calculator.getNumericValue(data, 'fieldname10') / 100;
+            const f12 = Calculator.getNumericValue(data, 'fieldname12') / 100;
+            const f14 = Calculator.getNumericValue(data, 'fieldname14', 100) / 100;
     
             const term1 = f2 * (1 + f6 - f10);
             const term2 = (f4 / 2) * (1 + f8 - f12);
             const baseDamage = Math.floor(term1 - term2);
-            return Math.max(baseDamage * f14, 0); // 元の計算式がfloorしていなかったので合わせる、最終的にfloorは総合ダメージで
+            return Math.max(baseDamage * f14, 0);
         },
     
         calculateMagicDamage: (data) => {
-            const f3 = Calculator.getNumericValue(data, 'fieldname3');    // 魔攻 (基礎ステ)
-            const f5 = Calculator.getNumericValue(data, 'fieldname5');    // 魔防 (基礎ステ)
-            const f7 = Calculator.getNumericValue(data, 'fieldname7') / 100;  // 魔攻バフ (%)
-            const f9 = Calculator.getNumericValue(data, 'fieldname9') / 100;  // 魔防アップ (%)
-            const f11 = Calculator.getNumericValue(data, 'fieldname11') / 100; // 魔攻ダウン (%)
-            const f13 = Calculator.getNumericValue(data, 'fieldname13') / 100; // 魔防ダウン (%)
-            const f15 = Calculator.getNumericValue(data, 'fieldname15', 100) / 100; // 魔攻倍率 (%)
+            const f3 = Calculator.getNumericValue(data, 'fieldname3');
+            const f5 = Calculator.getNumericValue(data, 'fieldname5');
+            const f7 = Calculator.getNumericValue(data, 'fieldname7') / 100;
+            const f9 = Calculator.getNumericValue(data, 'fieldname9') / 100;
+            const f11 = Calculator.getNumericValue(data, 'fieldname11') / 100;
+            const f13 = Calculator.getNumericValue(data, 'fieldname13') / 100;
+            const f15 = Calculator.getNumericValue(data, 'fieldname15', 100) / 100;
             
             const term1 = f3 * (1 + f7 - f11);
             const term2 = (f5 / 2) * (1 + f9 - f13);
             const baseDamage = Math.floor(term1 - term2);
-            return Math.max(baseDamage * f15, 0); // 同上
+            return Math.max(baseDamage * f15, 0);
         },
     
         calculateTotalDamage: (data, atkDmg, magDmg) => {
-            const f16 = Calculator.getNumericValue(data, 'fieldname16') / 100; // 属性軽減 (スキル・BB) %
-            const f17 = Calculator.getNumericValue(data, 'fieldname17') / 100; // 弱ダメ軽減 %
-            const f18 = Calculator.getNumericValue(data, 'fieldname18') / 100; // 弱ダメアップ %
-            const f19 = Calculator.getNumericValue(data, 'fieldname19') / 100; // 被状態異常ダメアップ %
-            const f20_raw = Calculator.getNumericValue(data, 'fieldname20');     // BBダメアップ % (raw value)
-            const f22 = Calculator.getNumericValue(data, 'fieldname22', 1);   // 属性相性
-            const f50 = Calculator.getNumericValue(data, 'fieldname50') / 100; // 属性軽減 (特性) %
+            const f16 = Calculator.getNumericValue(data, 'fieldname16') / 100;
+            const f17 = Calculator.getNumericValue(data, 'fieldname17') / 100;
+            const f18 = Calculator.getNumericValue(data, 'fieldname18') / 100;
+            const f19 = Calculator.getNumericValue(data, 'fieldname19') / 100; // Now 0 or 0.05
+            const f20_raw = Calculator.getNumericValue(data, 'fieldname20');
+            const f22 = Calculator.getNumericValue(data, 'fieldname22', 1);
+            const f50 = Calculator.getNumericValue(data, 'fieldname50') / 100; // Now 0 or 0.05
     
             const sumOfDamages = atkDmg + magDmg;
             
             let modifiedDamage = sumOfDamages * (f22 + f18 - f17);
-            modifiedDamage = modifiedDamage * (1 - f16); // スキル属性軽減
-            modifiedDamage = modifiedDamage * (1 - f50); // 特性属性軽減 (元はf19の減算側にあったが、意味合いからこちらが自然か。要確認)
-                                                          // 元の式: modifiedDamage * (1 + f19 - f50);
-                                                          // ここでは (1+f19) と (1-f50) を別々に乗算する形に変更 (より一般的)
-            modifiedDamage = modifiedDamage * (1 + f19); // 被状態異常ダメアップ
+            modifiedDamage = modifiedDamage * (1 - f16);
+            modifiedDamage = modifiedDamage * (1 - f50); 
+            modifiedDamage = modifiedDamage * (1 + f19);
 
-            const flooredModifiedDamage = Math.floor(modifiedDamage); // ここで一度floor
+            const flooredModifiedDamage = Math.floor(modifiedDamage);
             const finalTotalDamage = flooredModifiedDamage * (100 + f20_raw) / 100;
             
             return Math.floor(finalTotalDamage); 
         },
 
         calculateHpThreshold: (totalDamage, data) => {
-            const f29 = Calculator.getNumericValue(data, 'fieldname29', 30); // 全体BB発動HP %
-            if (f29 >= 100 || f29 < 0) return Infinity; // Avoid division by zero or negative
+            const f29 = Calculator.getNumericValue(data, 'fieldname29', 30);
+            if (f29 >= 100 || f29 <= 0) return Infinity; // Adjusted to f29 <= 0 to also cover this edge case.
             if (totalDamage <= 0) return 0;
-            const threshold = totalDamage / ((100 - f29) / 100); // (100-f29)が割合なので/100する
+            const threshold = totalDamage / ((100 - f29) / 100);
             return Math.round(threshold);
         },
 
         calculateDamagePercentage: (totalDamage, data) => {
-            const f41 = Calculator.getNumericValue(data, 'fieldname41'); // 最大HP
-            if (f41 === 0 || totalDamage <= 0) return 0;
+            const f41 = Calculator.getNumericValue(data, 'fieldname41');
+            if (f41 <= 0 || totalDamage <= 0) return 0; // Changed f41 === 0 to f41 <= 0
             return (totalDamage / f41) * 100;
         },
 
