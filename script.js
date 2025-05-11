@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const UIManager = {
         allInputFields: [],
         resultElements: {},
-        _recalculateTimeout: null, // For debouncing recalculation on direct input
+        _recalculateTimeout: null, 
 
         init() {
             this.allInputFields = Array.from(document.querySelectorAll('[data-field]'));
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.setupEventListeners();
             this.updateAllRadioGroupVisuals(); 
             this.updateAllBuffButtonVisuals(); 
-            Calculator.calculateAndDisplay(); 
+            // Calculator.calculateAndDisplay(); // loadFormState will trigger calculation
         },
 
         captureInitialFormState() {
@@ -41,12 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         setupEventListeners() {
-            // Main action buttons (manage profiles, reset form) - Calculate button removed
             document.querySelectorAll('.js-action-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const action = e.target.dataset.action;
                     switch(action) {
-                        // case 'calculate': Calculator.calculateAndDisplay(); break; // Removed
                         case 'manageProfiles':
                             this.openProfileModal();
                             break;
@@ -96,14 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             this.allInputFields.forEach(input => {
-                input.addEventListener('change', () => { // Handles programmatic changes for hidden inputs too
+                input.addEventListener('change', () => { 
                     this.saveCurrentFormState();
-                    Calculator.calculateAndDisplay(); // Recalculate on change (e.g. for radio/buff buttons affecting hidden inputs)
+                    Calculator.calculateAndDisplay(); 
                 });
-                if (input.type === 'number') { // For direct typing in number fields
+                if (input.type === 'number') { 
                     input.addEventListener('input', () => {
                         this.saveCurrentFormStateDebounced();
-                        this.recalculateDebounced(); // Debounced recalculation for typed input
+                        this.recalculateDebounced(); 
                     });
                 }
             });
@@ -114,9 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inputElement && inputElement.type === 'number') { 
                 let currentValue = parseFloat(inputElement.value) || 0;
                 inputElement.value = currentValue + step;
-                // Trigger change event for consistency with auto-save and recalculate logic
                 inputElement.dispatchEvent(new Event('change', { bubbles: true }));
-                this.updateBuffButtonVisuals(fieldId); // Update buff buttons if they control this field
+                this.updateBuffButtonVisuals(fieldId); 
             }
         },
         
@@ -127,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 groupElement.querySelectorAll('.btn-radio').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.value === value);
                 });
-                // Trigger change event for consistency
                 hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
         },
@@ -137,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inputElement) {
                 inputElement.value = value;
                 this.updateBuffButtonVisuals(fieldId);
-                // Trigger change event for consistency
                 inputElement.dispatchEvent(new Event('change', { bubbles: true }));
             }
         },
@@ -203,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             this.updateAllRadioGroupVisuals();
             this.updateAllBuffButtonVisuals();
-            // After form data is set (e.g., from profile load or reset), trigger calculation
             Calculator.calculateAndDisplay(); 
         },
 
@@ -231,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resetForm() {
             if (confirm('フォームの入力内容を初期状態にリセットしますか？（自動保存された内容は上書きされます）')) {
-                this.setFormData(initialFormState); // This will also trigger recalculation via its own logic
+                this.setFormData(initialFormState); 
                 this.saveCurrentFormState(); 
             }
         },
@@ -263,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(this._recalculateTimeout);
             this._recalculateTimeout = setTimeout(() => {
                 Calculator.calculateAndDisplay();
-            }, 350); // Slightly longer delay than save, or could be same
+            }, 350); 
         },
 
         loadFormState() {
@@ -271,14 +265,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (savedState) {
                 try {
                     const formData = JSON.parse(savedState);
-                    this.setFormData(formData); // Will trigger recalculation
+                    this.setFormData(formData); 
                 } catch (e) {
                     console.error("Error parsing auto-saved state from localStorage:", e);
                     localStorage.removeItem(LS_AUTO_SAVE_KEY);
-                    this.setFormData(initialFormState); // Fallback, will trigger recalculation
+                    this.setFormData(initialFormState); 
                 }
             } else {
-                 this.setFormData(initialFormState); // Apply initial state, will trigger recalculation
+                 this.setFormData(initialFormState); 
             }
         }
     };
@@ -336,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (name) {
                 const profileData = ProfileManager.getFromProfiles(name);
                 if (profileData) {
-                    UIManager.setFormData(profileData); // This now triggers recalculation
+                    UIManager.setFormData(profileData); 
                     UIManager.saveCurrentFormState(); 
                     UIManager.closeProfileModal();
                     alert(`プロフィール「${name}」を読み込みました。`);
@@ -402,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         calculateTotalDamage: (data, atkDmg, magDmg) => {
             const f16 = Calculator.getNumericValue(data, 'fieldname16') / 100;
-            const f17 = Calculator.getNumericValue(data, 'fieldname17') / 100; // Now from radio 0 or 5
+            const f17 = Calculator.getNumericValue(data, 'fieldname17') / 100;
             const f18 = Calculator.getNumericValue(data, 'fieldname18') / 100;
             const f19 = Calculator.getNumericValue(data, 'fieldname19') / 100; 
             const f20_raw = Calculator.getNumericValue(data, 'fieldname20');
