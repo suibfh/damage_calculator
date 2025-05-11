@@ -1,10 +1,10 @@
 body {
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-    margin: 0;
-    padding: 15px;
+    margin: 0; /* iframe内で使用する場合は0のことが多い */
+    padding: 15px; /* 親ページでpaddingがあるならiframe側は0でもよい */
     background-color: #f0f2f5;
     color: #333;
-    font-size: 14px; /* ベースフォントサイズ調整 */
+    font-size: 14px;
 }
 
 .container {
@@ -13,7 +13,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     max-width: 1200px;
-    margin: 20px auto;
+    margin: 20px auto; /* 通常のページ表示用。iframeなら不要かも */
 }
 
 h1, h2, h3 {
@@ -33,7 +33,7 @@ h3 { font-size: 1.1em; margin-bottom: 10px; color: #4b4f56;}
 .button-group.main-actions {
     justify-content: center;
 }
-.button-group.results-actions { /* Style for buttons above results */
+.button-group.results-actions {
     justify-content: center;
     margin-top: 20px; 
 }
@@ -89,6 +89,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 .input-wrapper {
     display: flex; 
     align-items: center;
+    flex-wrap: wrap; /* Allow pm-buttons to wrap if input is short */
 }
 
 .form-group input[type="number"],
@@ -100,6 +101,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
     font-size: 0.9em; 
     flex-grow: 1; 
     min-width: 60px; 
+    margin-right: 5px; /* Add some space before buttons if they are on the same line */
 }
 .form-group input[type="number"]:focus,
 .form-group select:focus {
@@ -110,14 +112,19 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 
 .pm-buttons {
     display: flex;
-    margin-left: 5px;
+    flex-wrap: wrap; /* Allow buttons to wrap to the next line */
+    gap: 3px; /* Space between buttons */
+    /* margin-left: 5px; Removed to allow better wrapping with input */
+    flex-grow: 2; /* Allow button group to take more space if needed */
 }
 .pm-buttons .pm-btn {
-    padding: 4px 6px; 
-    font-size: 0.8em; 
-    min-width: 40px; 
-    margin-left: 3px;
+    padding: 4px 6px; /* Slightly reduced padding for more buttons */
+    font-size: 0.75em; /* Slightly reduced font size */
+    min-width: 35px; /* Adjusted min-width */
+    /* margin-left: 3px; Replaced by gap */
     background-color: #6c757d;
+    flex-grow: 1; /* Allow buttons to grow and fill space */
+    text-align: center;
 }
 .pm-buttons .pm-btn:hover {
     background-color: #545b62;
