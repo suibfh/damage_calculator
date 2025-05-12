@@ -1,12 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const LS_PROFILES_KEY = 'bfhDamageCalcProfiles_v2';
-    const LS_AUTO_SAVE_KEY = 'bfhDamageCalcFormState_v2';
+    const LS_FORMS_KEY = 'bfhDamageCalcForms_v3'; // Changed localStorage key
+    const LS_AUTO_SAVE_KEY = 'bfhDamageCalcFormState_v3'; // Changed localStorage key
     let initialFormState = {};
 
     const UIManager = {
         allInputFields: [],
         resultElements: {},
-        _recalculateTimeout: null, 
+        formModal: null, // Added reference to modal
+        formModalOverlay: null, // Added reference to modal overlay
+        _recalculateTimeout: null,
 
         init() {
             this.allInputFields = Array.from(document.querySelectorAll('[data-field]'));
@@ -17,13 +19,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 fieldname30: document.getElementById('result_fieldname30'),
                 fieldname42: document.getElementById('result_fieldname42'),
             };
+            this.formModal = document.getElementById('formModal'); // Get modal element
+            
+            // Create and append overlay if it doesn't exist
+            this.formModalOverlay = document.querySelector('.modal-overlay');
+            if (!this.formModalOverlay) {
+                this.formModalOverlay = document.createElement('div');
+                this.formModalOverlay.className = 'modal-overlay';
+                document.body.appendChild(this.formModalOverlay);
+            }
+
 
             this.captureInitialFormState();
-            this.loadFormState(); 
+            this.loadFormState();
             this.setupEventListeners();
-            this.updateAllRadioGroupVisuals(); 
-            this.updateAllBuffButtonVisuals(); 
-            // Calculator.calculateAndDisplay(); // loadFormState will trigger calculation
+            this.updateAllRadioGroupVisuals();
+            this.updateAllBuffButtonVisuals();
         },
 
         captureInitialFormState() {
@@ -39,34 +50,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         },
-        
+
         setupEventListeners() {
             document.querySelectorAll('.js-action-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const action = e.target.dataset.action;
                     switch(action) {
-                        case 'manageProfiles':
-                            this.openProfileModal();
+                        case 'manageForms': // Changed action name
+                            this.openFormModal();
                             break;
                         case 'resetForm':
                             this.resetForm();
                             break;
-                        case 'closeProfileModal':
-                            this.closeProfileModal();
+                        case 'closeFormModal': // Changed action name
+                            this.closeFormModal();
                             break;
                     }
                 });
             });
+
+            document.getElementById('saveFormBtn').addEventListener('click', () => FormManager.handleSaveForm()); // Changed ID
+            document.getElementById('loadFormBtn').addEventListener('click', () => FormManager.handleLoadForm()); // Changed ID
+            document.getElementById('deleteFormBtn').addEventListener('click', () => FormManager.handleDeleteForm()); // Changed ID
+
+            // Close modal if overlay is clicked
+            this.formModalOverlay.addEventListener('click', () => this.closeFormModal());
             
-            document.getElementById('saveProfileBtn').addEventListener('click', () => ProfileManager.handleSaveProfile());
-            document.getElementById('loadProfileBtn').addEventListener('click', () => ProfileManager.handleLoadProfile());
-            document.getElementById('deleteProfileBtn').addEventListener('click', () => ProfileManager.handleDeleteProfile());
-            
-            window.addEventListener('click', (event) => {
-                if (event.target === document.getElementById('profileModal')) {
-                    this.closeProfileModal();
+            // Close modal if escape key is pressed
+             window.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && this.formModal.style.display === 'block') {
+                    this.closeFormModal();
                 }
             });
+
 
             document.querySelectorAll('.pm-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -79,12 +95,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.radio-button-group .btn-radio').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const group = e.target.closest('.radio-button-group');
-                    const targetField = group.dataset.radioGroupField; 
+                    const targetField = group.dataset.radioGroupField;
                     const value = e.target.dataset.value;
                     this.handleRadioSelection(targetField, value, group);
                 });
             });
-            
+
             document.querySelectorAll('.buff-buttons .buff-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const targetId = e.target.dataset.target;
@@ -94,14 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             this.allInputFields.forEach(input => {
-                input.addEventListener('change', () => { 
+                input.addEventListener('change', () => {
                     this.saveCurrentFormState();
-                    Calculator.calculateAndDisplay(); 
+                    Calculator.calculateAndDisplay();
                 });
-                if (input.type === 'number') { 
+                if (input.type === 'number') {
                     input.addEventListener('input', () => {
                         this.saveCurrentFormStateDebounced();
-                        this.recalculateDebounced(); 
+                        this.recalculateDebounced();
                     });
                 }
             });
@@ -109,16 +125,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         handleNumberButtonClick(fieldId, step) {
             const inputElement = document.getElementById(fieldId);
-            if (inputElement && inputElement.type === 'number') { 
+            if (inputElement && inputElement.type === 'number') {
                 let currentValue = parseFloat(inputElement.value) || 0;
                 inputElement.value = currentValue + step;
                 inputElement.dispatchEvent(new Event('change', { bubbles: true }));
-                this.updateBuffButtonVisuals(fieldId); 
+                this.updateBuffButtonVisuals(fieldId);
             }
         },
-        
+
         handleRadioSelection(fieldId, value, groupElement) {
-            const hiddenInput = document.getElementById(fieldId); 
+            const hiddenInput = document.getElementById(fieldId);
             if (hiddenInput) {
                 hiddenInput.value = value;
                 groupElement.querySelectorAll('.btn-radio').forEach(btn => {
@@ -136,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 inputElement.dispatchEvent(new Event('change', { bubbles: true }));
             }
         },
-        
+
         updateRadioGroupVisuals(fieldIdOfHiddenInput) {
             const hiddenInput = document.getElementById(fieldIdOfHiddenInput);
             if (hiddenInput && hiddenInput.type === 'hidden') {
@@ -171,10 +187,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         },
-        
+
         updateAllBuffButtonVisuals() {
             this.allInputFields.forEach(input => {
-                if (input.type === 'number') { 
+                if (input.type === 'number') {
                      this.updateBuffButtonVisuals(input.id);
                 }
             });
@@ -198,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             this.updateAllRadioGroupVisuals();
             this.updateAllBuffButtonVisuals();
-            Calculator.calculateAndDisplay(); 
+            Calculator.calculateAndDisplay();
         },
 
         displayResults(results) {
@@ -209,9 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (typeof value === 'number') {
                         if (Number.isInteger(value)) {
                             displayValue = value;
-                        } else if (key === 'fieldname42') { 
+                        } else if (key === 'fieldname42') {
                             displayValue = value.toFixed(2);
-                        } 
+                        }
                         else {
                              displayValue = Math.floor(value);
                         }
@@ -225,39 +241,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resetForm() {
             if (confirm('フォームの入力内容を初期状態にリセットしますか？（自動保存された内容は上書きされます）')) {
-                this.setFormData(initialFormState); 
-                this.saveCurrentFormState(); 
+                this.setFormData(initialFormState);
+                this.saveCurrentFormState();
             }
         },
 
-        openProfileModal() {
-            document.getElementById('profileModal').style.display = 'block';
-            ProfileManager.populateProfileList();
-            document.getElementById('profileNameInput').value = '';
+        openFormModal() { // Changed method name
+            this.formModal.style.display = 'block';
+            this.formModalOverlay.style.display = 'block';
+            FormManager.populateFormList(); // Changed call
+            document.getElementById('formNameInput').value = ''; // Changed ID
         },
 
-        closeProfileModal() {
-            document.getElementById('profileModal').style.display = 'none';
+        closeFormModal() { // Changed method name
+            this.formModal.style.display = 'none';
+            this.formModalOverlay.style.display = 'none';
         },
 
         saveCurrentFormState() {
             const formData = this.getFormData();
             localStorage.setItem(LS_AUTO_SAVE_KEY, JSON.stringify(formData));
         },
-        
+
         _saveTimeout: null,
         saveCurrentFormStateDebounced() {
             clearTimeout(this._saveTimeout);
             this._saveTimeout = setTimeout(() => {
                 this.saveCurrentFormState();
-            }, 300); 
+            }, 300);
         },
-        
+
         recalculateDebounced() {
             clearTimeout(this._recalculateTimeout);
             this._recalculateTimeout = setTimeout(() => {
                 Calculator.calculateAndDisplay();
-            }, 350); 
+            }, 350);
         },
 
         loadFormState() {
@@ -265,98 +283,98 @@ document.addEventListener('DOMContentLoaded', () => {
             if (savedState) {
                 try {
                     const formData = JSON.parse(savedState);
-                    this.setFormData(formData); 
+                    this.setFormData(formData);
                 } catch (e) {
                     console.error("Error parsing auto-saved state from localStorage:", e);
                     localStorage.removeItem(LS_AUTO_SAVE_KEY);
-                    this.setFormData(initialFormState); 
+                    this.setFormData(initialFormState);
                 }
             } else {
-                 this.setFormData(initialFormState); 
+                 this.setFormData(initialFormState);
             }
         }
     };
 
-    const ProfileManager = {
-        profileNameInput: document.getElementById('profileNameInput'),
-        profileListSelect: document.getElementById('profileList'),
+    const FormManager = { // Changed object name
+        formNameInput: document.getElementById('formNameInput'), // Changed ID
+        formListSelect: document.getElementById('formList'), // Changed ID
 
-        loadProfiles: () => {
-            const profiles = localStorage.getItem(LS_PROFILES_KEY);
-            return profiles ? JSON.parse(profiles) : {};
+        loadForms: () => { // Changed method name
+            const forms = localStorage.getItem(LS_FORMS_KEY);
+            return forms ? JSON.parse(forms) : {};
         },
-        saveToProfiles: (name, data) => {
+        saveForm: (name, data) => { // Changed method name
             if (!name) {
-                alert('プロフィール名を入力してください。');
+                alert('フォーム名を入力してください。');
                 return false;
             }
-            const profiles = ProfileManager.loadProfiles();
-            profiles[name] = data;
-            localStorage.setItem(LS_PROFILES_KEY, JSON.stringify(profiles));
+            const forms = FormManager.loadForms(); // Changed call
+            forms[name] = data;
+            localStorage.setItem(LS_FORMS_KEY, JSON.stringify(forms));
             return true;
         },
-        deleteFromProfiles: (name) => {
+        deleteForm: (name) => { // Changed method name
             if (!name) return false;
-            const profiles = ProfileManager.loadProfiles();
-            delete profiles[name];
-            localStorage.setItem(LS_PROFILES_KEY, JSON.stringify(profiles));
+            const forms = FormManager.loadForms(); // Changed call
+            delete forms[name];
+            localStorage.setItem(LS_FORMS_KEY, JSON.stringify(forms));
             return true;
         },
-        getFromProfiles: (name) => {
-            const profiles = ProfileManager.loadProfiles();
-            return profiles[name];
+        getForm: (name) => { // Changed method name
+            const forms = FormManager.loadForms(); // Changed call
+            return forms[name];
         },
-        populateProfileList: () => {
-            const profiles = ProfileManager.loadProfiles();
-            ProfileManager.profileListSelect.innerHTML = '<option value="">--- プロフィールを選択 ---</option>';
-            for (const name in profiles) {
+        populateFormList: () => { // Changed method name
+            const forms = FormManager.loadForms(); // Changed call
+            FormManager.formListSelect.innerHTML = '<option value="">--- 保存済みフォームを選択 ---</option>';
+            for (const name in forms) {
                 const option = document.createElement('option');
                 option.value = name;
                 option.textContent = name;
-                ProfileManager.profileListSelect.appendChild(option);
+                FormManager.formListSelect.appendChild(option);
             }
         },
-        handleSaveProfile: () => {
-            const name = ProfileManager.profileNameInput.value.trim();
+        handleSaveForm: () => { // Changed method name
+            const name = FormManager.formNameInput.value.trim();
             const currentFormData = UIManager.getFormData();
-            if (ProfileManager.saveToProfiles(name, currentFormData)) {
-                alert(`プロフィール「${name}」を保存しました。`);
-                ProfileManager.populateProfileList();
-                ProfileManager.profileNameInput.value = '';
+            if (FormManager.saveForm(name, currentFormData)) { // Changed call
+                alert(`フォーム「${name}」を保存しました。`);
+                FormManager.populateFormList(); // Changed call
+                FormManager.formNameInput.value = '';
             }
         },
-        handleLoadProfile: () => {
-            const name = ProfileManager.profileListSelect.value;
+        handleLoadForm: () => { // Changed method name
+            const name = FormManager.formListSelect.value;
             if (name) {
-                const profileData = ProfileManager.getFromProfiles(name);
-                if (profileData) {
-                    UIManager.setFormData(profileData); 
-                    UIManager.saveCurrentFormState(); 
-                    UIManager.closeProfileModal();
-                    alert(`プロフィール「${name}」を読み込みました。`);
+                const formData = FormManager.getForm(name); // Changed call
+                if (formData) {
+                    UIManager.setFormData(formData);
+                    UIManager.saveCurrentFormState();
+                    UIManager.closeFormModal(); // Changed call
+                    alert(`フォーム「${name}」を読み込みました。`);
                 } else {
-                    alert("選択されたプロフィールの読み込みに失敗しました。");
+                    alert("選択されたフォームの読み込みに失敗しました。");
                 }
             } else {
-                alert('読み込むプロフィールを選択してください。');
+                alert('読み込むフォームを選択してください。');
             }
         },
-        handleDeleteProfile: () => {
-            const name = ProfileManager.profileListSelect.value;
+        handleDeleteForm: () => { // Changed method name
+            const name = FormManager.formListSelect.value;
             if (name) {
-                if (confirm(`プロフィール「${name}」を削除してもよろしいですか？`)) {
-                    if (ProfileManager.deleteFromProfiles(name)) {
-                        alert(`プロフィール「${name}」を削除しました。`);
-                        ProfileManager.populateProfileList();
+                if (confirm(`フォーム「${name}」を削除してもよろしいですか？`)) {
+                    if (FormManager.deleteForm(name)) { // Changed call
+                        alert(`フォーム「${name}」を削除しました。`);
+                        FormManager.populateFormList(); // Changed call
                     }
                 }
             } else {
-                alert('削除するプロフィールを選択してください。');
+                alert('削除するフォームを選択してください。');
             }
         }
     };
 
-    const Calculator = {
+    const Calculator = { // Calculation logic remains the same
         getNumericValue(data, fieldName, defaultValue = 0) {
             const valStr = data[fieldName];
             if (valStr === undefined || valStr === null || String(valStr).trim() === '') return defaultValue;
@@ -372,13 +390,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const f10 = Calculator.getNumericValue(data, 'fieldname10') / 100;
             const f12 = Calculator.getNumericValue(data, 'fieldname12') / 100;
             const f14 = Calculator.getNumericValue(data, 'fieldname14', 100) / 100;
-    
+
             const term1 = f2 * (1 + f6 - f10);
             const term2 = (f4 / 2) * (1 + f8 - f12);
             const baseDamage = Math.floor(term1 - term2);
             return Math.max(baseDamage * f14, 0);
         },
-    
+
         calculateMagicDamage: (data) => {
             const f3 = Calculator.getNumericValue(data, 'fieldname3');
             const f5 = Calculator.getNumericValue(data, 'fieldname5');
@@ -387,38 +405,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const f11 = Calculator.getNumericValue(data, 'fieldname11') / 100;
             const f13 = Calculator.getNumericValue(data, 'fieldname13') / 100;
             const f15 = Calculator.getNumericValue(data, 'fieldname15', 100) / 100;
-            
+
             const term1 = f3 * (1 + f7 - f11);
             const term2 = (f5 / 2) * (1 + f9 - f13);
             const baseDamage = Math.floor(term1 - term2);
             return Math.max(baseDamage * f15, 0);
         },
-    
+
         calculateTotalDamage: (data, atkDmg, magDmg) => {
             const f16 = Calculator.getNumericValue(data, 'fieldname16') / 100;
             const f17 = Calculator.getNumericValue(data, 'fieldname17') / 100;
             const f18 = Calculator.getNumericValue(data, 'fieldname18') / 100;
-            const f19 = Calculator.getNumericValue(data, 'fieldname19') / 100; 
+            const f19 = Calculator.getNumericValue(data, 'fieldname19') / 100;
             const f20_raw = Calculator.getNumericValue(data, 'fieldname20');
             const f22 = Calculator.getNumericValue(data, 'fieldname22', 1);
-            const f50 = Calculator.getNumericValue(data, 'fieldname50') / 100; 
-    
+            const f50 = Calculator.getNumericValue(data, 'fieldname50') / 100;
+
             const sumOfDamages = atkDmg + magDmg;
-            
+
             let modifiedDamage = sumOfDamages * (f22 + f18 - f17);
             modifiedDamage = modifiedDamage * (1 - f16);
-            modifiedDamage = modifiedDamage * (1 - f50); 
+            modifiedDamage = modifiedDamage * (1 - f50);
             modifiedDamage = modifiedDamage * (1 + f19);
 
             const flooredModifiedDamage = Math.floor(modifiedDamage);
             const finalTotalDamage = flooredModifiedDamage * (100 + f20_raw) / 100;
-            
-            return Math.floor(finalTotalDamage); 
+
+            return Math.floor(finalTotalDamage);
         },
 
         calculateHpThreshold: (totalDamage, data) => {
             const f29 = Calculator.getNumericValue(data, 'fieldname29', 30);
-            if (f29 >= 100 || f29 <= 0) return Infinity; 
+            if (f29 >= 100 || f29 <= 0) return Infinity;
             if (totalDamage <= 0) return 0;
             const threshold = totalDamage / ((100 - f29) / 100);
             return Math.round(threshold);
@@ -426,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         calculateDamagePercentage: (totalDamage, data) => {
             const f41 = Calculator.getNumericValue(data, 'fieldname41');
-            if (f41 <= 0 || totalDamage <= 0) return 0; 
+            if (f41 <= 0 || totalDamage <= 0) return 0;
             return (totalDamage / f41) * 100;
         },
 
@@ -439,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             results.fieldname1 = Calculator.calculateTotalDamage(formData, results.fieldname37, results.fieldname38);
             results.fieldname30 = Calculator.calculateHpThreshold(results.fieldname1, formData);
             results.fieldname42 = Calculator.calculateDamagePercentage(results.fieldname1, formData);
-            
+
             return results;
         },
 
