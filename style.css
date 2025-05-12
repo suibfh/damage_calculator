@@ -1,7 +1,7 @@
 body {
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-    margin: 0; /* iframe内で使用する場合は0のことが多い */
-    padding: 15px; /* 親ページでpaddingがあるならiframe側は0でもよい */
+    margin: 0;
+    padding: 15px;
     background-color: #f0f2f5;
     color: #333;
     font-size: 14px;
@@ -13,7 +13,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     max-width: 1200px;
-    margin: 20px auto; /* 通常のページ表示用。iframeなら不要かも */
+    margin: 20px auto;
 }
 
 h1, h2, h3 {
@@ -35,30 +35,28 @@ h3 { font-size: 1.1em; margin-bottom: 10px; color: #4b4f56;}
 }
 .button-group.results-actions {
     justify-content: center;
-    margin-top: 20px; 
+    margin-top: 20px;
 }
 
-
 button, .btn-like-label {
-    padding: 8px 12px; 
+    padding: 8px 12px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9em; 
+    font-size: 0.9em;
     transition: background-color 0.2s ease;
 }
 button:hover {
     background-color: #0056b3;
 }
-button.danger-btn, button#deleteProfileBtn {
+button.danger-btn, button#deleteFormBtn { /* Changed ID */
     background-color: #dc3545;
 }
-button.danger-btn:hover, button#deleteProfileBtn:hover {
+button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
     background-color: #c82333;
 }
-
 
 .form-container {
     display: grid;
@@ -75,33 +73,33 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 
 .form-group {
     display: flex;
-    flex-direction: column; 
-    margin-bottom: 12px; 
+    flex-direction: column;
+    margin-bottom: 12px;
 }
 
 .form-group label {
-    margin-bottom: 4px; 
+    margin-bottom: 4px;
     font-weight: bold;
-    font-size: 0.85em; 
+    font-size: 0.85em;
     color: #333;
 }
 
 .input-wrapper {
-    display: flex; 
+    display: flex;
     align-items: center;
-    flex-wrap: wrap; /* Allow pm-buttons to wrap if input is short */
+    flex-wrap: nowrap; /* Prevent input field from wrapping below buttons for status fields */
 }
 
 .form-group input[type="number"],
-.form-group select { 
-    padding: 6px 8px; 
+.form-group select {
+    padding: 6px 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
-    font-size: 0.9em; 
-    flex-grow: 1; 
-    min-width: 60px; 
-    margin-right: 5px; /* Add some space before buttons if they are on the same line */
+    font-size: 0.9em;
+    flex-grow: 1; /* Input field takes available space */
+    min-width: 50px; /* Reduced min-width for input to allow more space for buttons */
+    margin-right: 5px;
 }
 .form-group input[type="number"]:focus,
 .form-group select:focus {
@@ -112,23 +110,29 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 
 .pm-buttons {
     display: flex;
-    flex-wrap: wrap; /* Allow buttons to wrap to the next line */
-    gap: 3px; /* Space between buttons */
-    /* margin-left: 5px; Removed to allow better wrapping with input */
-    flex-grow: 2; /* Allow button group to take more space if needed */
+    flex-wrap: nowrap; /* Keep buttons in a single line */
+    gap: 2px; /* Reduced gap */
+    flex-shrink: 0; /* Prevent button group from shrinking */
 }
 .pm-buttons .pm-btn {
-    padding: 4px 6px; /* Slightly reduced padding for more buttons */
-    font-size: 0.75em; /* Slightly reduced font size */
-    min-width: 35px; /* Adjusted min-width */
-    /* margin-left: 3px; Replaced by gap */
+    padding: 4px 5px; /* Adjusted padding */
+    font-size: 0.65em; /* Adjusted font size */
+    min-width: 28px; /* Adjusted min-width */
     background-color: #6c757d;
-    flex-grow: 1; /* Allow buttons to grow and fill space */
+    flex-grow: 0; /* Buttons don't grow, rely on min-width */
     text-align: center;
+    line-height: 1.2; /* Adjust line height for smaller font */
 }
 .pm-buttons .pm-btn:hover {
     background-color: #545b62;
 }
+/* Specific styling for +/- buttons in buff/debuff section if needed to differentiate */
+.form-section:not(:first-child) .pm-buttons .pm-btn { /* Example: only for non-status sections */
+    font-size: 0.75em;
+    min-width: 35px;
+    padding: 4px 6px;
+}
+
 
 .buff-buttons {
     display: flex;
@@ -144,20 +148,19 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 .buff-buttons .buff-btn:hover {
     background-color: #117a8b;
 }
-.buff-buttons .buff-btn.active { 
+.buff-buttons .buff-btn.active {
     background-color: #0056b3;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
 }
 
-
 .radio-button-group {
     display: flex;
     gap: 5px;
-    margin-top: 5px; 
+    margin-top: 5px;
 }
 .radio-button-group .btn-radio {
-    padding: 6px 10px; 
-    font-size: 0.85em; 
+    padding: 6px 10px;
+    font-size: 0.85em;
     background-color: #e9ecef;
     color: #495057;
     border: 1px solid #ced4da;
@@ -171,7 +174,6 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
     border-color: #007bff;
 }
 
-
 .note {
     font-size: 0.8em;
     color: #666;
@@ -182,7 +184,7 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
-    margin-top: 10px; 
+    margin-top: 10px;
 }
 .result-item {
     background-color: #e9ecef;
@@ -204,19 +206,45 @@ button.danger-btn:hover, button#deleteProfileBtn:hover {
 
 /* Modal Styles */
 .modal {
-    display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-    overflow: auto; background-color: rgba(0,0,0,0.5);
+    display: none;
+    position: fixed; /* Changed from absolute to fixed */
+    z-index: 1000;
+    left: 50%; /* Centering */
+    top: 50%;  /* Centering */
+    transform: translate(-50%, -50%); /* Precise centering */
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh; /* Max height to prevent overflow on small screens */
+    overflow-y: auto; /* Allow scrolling within the modal if content is too tall */
+    background-color: #fefefe;
+    padding: 25px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
-.modal-content {
-    background-color: #fefefe; margin: 10% auto; padding: 25px; border: 1px solid #888;
-    width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+/* Background overlay for modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 999; /* Below modal, above everything else */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
 }
-.modal-content h2 { margin-top: 0; font-size: 1.5em; }
+
+.modal-content { /* This class can be removed if modal styling is directly on .modal */
+    /* background-color: #fefefe; margin: 0; padding: 0; border: none; width: 100%; border-radius: 0; box-shadow: none; */
+    /* Styles previously here are now mostly on .modal directly */
+}
+.modal h2 { margin-top: 0; font-size: 1.5em; }
 .modal-form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
 .modal-form-group label { margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
 .modal-form-group input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
 
 .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; line-height: 1;}
 .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
-.profile-actions { margin-top: 15px; display: flex; gap: 10px; align-items: center; }
-.profile-actions select { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;}
+.form-actions { margin-top: 15px; display: flex; gap: 10px; align-items: center; } /* Changed class name */
+.form-actions select { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;} /* Changed class name */
