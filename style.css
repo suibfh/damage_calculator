@@ -33,10 +33,7 @@ h3 { font-size: 1.1em; margin-bottom: 10px; color: #4b4f56;}
 .button-group.main-actions {
     justify-content: center;
 }
-.button-group.results-actions {
-    justify-content: center;
-    margin-top: 20px;
-}
+/* .button-group.results-actions was removed */
 
 button, .btn-like-label {
     padding: 8px 12px;
@@ -51,10 +48,10 @@ button, .btn-like-label {
 button:hover {
     background-color: #0056b3;
 }
-button.danger-btn, button#deleteFormBtn { /* Changed ID */
+button.danger-btn, button#deleteFormBtn {
     background-color: #dc3545;
 }
-button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
+button.danger-btn:hover, button#deleteFormBtn:hover {
     background-color: #c82333;
 }
 
@@ -87,8 +84,32 @@ button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
 .input-wrapper {
     display: flex;
     align-items: center;
-    flex-wrap: nowrap; /* Prevent input field from wrapping below buttons for status fields */
+    flex-wrap: nowrap; 
 }
+
+/* Specific styling for status input sections */
+.status-input-wrapper {
+    flex-direction: column; /* Stack input field and buttons vertically */
+    align-items: stretch;   /* Make children take full width */
+}
+.status-input-wrapper input[type="number"] {
+    margin-right: 0;      /* Remove right margin */
+    margin-bottom: 8px;   /* Add bottom margin to separate from buttons */
+    width: 100%;          /* Take full width */
+    box-sizing: border-box;
+}
+.status-input-wrapper .pm-buttons {
+    justify-content: space-between; /* Distribute buttons evenly */
+    width: 100%; /* Take full width */
+}
+.status-input-wrapper .pm-buttons .pm-btn {
+    flex-grow: 1; /* Allow buttons to grow and fill space if needed */
+    margin: 0 1px; /* Minimal margin between buttons */
+    min-width: auto; /* Let flexbox determine width, adjust padding if needed */
+    padding: 4px 2px; /* Adjusted padding to fit more buttons */
+    font-size: 0.6em; /* Slightly smaller font for these buttons to fit */
+}
+
 
 .form-group input[type="number"],
 .form-group select {
@@ -97,9 +118,9 @@ button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
     border-radius: 4px;
     box-sizing: border-box;
     font-size: 0.9em;
-    flex-grow: 1; /* Input field takes available space */
-    min-width: 50px; /* Reduced min-width for input to allow more space for buttons */
-    margin-right: 5px;
+    flex-grow: 1; 
+    min-width: 50px; 
+    margin-right: 5px; /* Default right margin for non-status inputs */
 }
 .form-group input[type="number"]:focus,
 .form-group select:focus {
@@ -110,24 +131,24 @@ button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
 
 .pm-buttons {
     display: flex;
-    flex-wrap: nowrap; /* Keep buttons in a single line */
-    gap: 2px; /* Reduced gap */
-    flex-shrink: 0; /* Prevent button group from shrinking */
+    flex-wrap: nowrap; 
+    gap: 2px; 
+    flex-shrink: 0; 
 }
 .pm-buttons .pm-btn {
-    padding: 4px 5px; /* Adjusted padding */
-    font-size: 0.65em; /* Adjusted font size */
-    min-width: 28px; /* Adjusted min-width */
+    padding: 4px 5px; 
+    font-size: 0.65em; 
+    min-width: 28px; 
     background-color: #6c757d;
-    flex-grow: 0; /* Buttons don't grow, rely on min-width */
+    flex-grow: 0; 
     text-align: center;
-    line-height: 1.2; /* Adjust line height for smaller font */
+    line-height: 1.2; 
 }
 .pm-buttons .pm-btn:hover {
     background-color: #545b62;
 }
-/* Specific styling for +/- buttons in buff/debuff section if needed to differentiate */
-.form-section:not(:first-child) .pm-buttons .pm-btn { /* Example: only for non-status sections */
+/* Specific styling for +/- buttons in buff/debuff section */
+.form-section:not(:first-child) .input-wrapper .pm-buttons .pm-btn { /* More specific selector */
     font-size: 0.75em;
     min-width: 35px;
     padding: 4px 6px;
@@ -184,7 +205,7 @@ button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
-    margin-top: 10px;
+    margin-top: 20px; /* Added margin-top as results-actions group was removed */
 }
 .result-item {
     background-color: #e9ecef;
@@ -207,26 +228,28 @@ button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
 /* Modal Styles */
 .modal {
     display: none;
-    position: fixed; /* Changed from absolute to fixed */
+    position: absolute; /* Reverted from fixed */
     z-index: 1000;
-    left: 50%; /* Centering */
-    top: 50%;  /* Centering */
-    transform: translate(-50%, -50%); /* Precise centering */
+    left: 50%; 
+    top: 5%;  /* Position from the top */
+    transform: translateX(-50%); /* Horizontally center */
     width: 90%;
     max-width: 500px;
-    max-height: 90vh; /* Max height to prevent overflow on small screens */
-    overflow-y: auto; /* Allow scrolling within the modal if content is too tall */
+    /* max-height: 90vh; Removed fixed max-height, let content define it or add if needed */
+    overflow-y: auto; 
     background-color: #fefefe;
     padding: 25px;
     border: 1px solid #888;
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    margin-bottom: 5%; /* Add some bottom margin if content is very long */
 }
+
 /* Background overlay for modal */
 .modal-overlay {
     display: none;
-    position: fixed;
-    z-index: 999; /* Below modal, above everything else */
+    position: fixed; /* Overlay remains fixed to cover viewport */
+    z-index: 999; 
     left: 0;
     top: 0;
     width: 100%;
@@ -235,8 +258,7 @@ button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
     background-color: rgba(0,0,0,0.5);
 }
 
-.modal-content { /* This class can be removed if modal styling is directly on .modal */
-    /* background-color: #fefefe; margin: 0; padding: 0; border: none; width: 100%; border-radius: 0; box-shadow: none; */
+.modal-content { 
     /* Styles previously here are now mostly on .modal directly */
 }
 .modal h2 { margin-top: 0; font-size: 1.5em; }
@@ -246,5 +268,5 @@ button.danger-btn:hover, button#deleteFormBtn:hover { /* Changed ID */
 
 .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; line-height: 1;}
 .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
-.form-actions { margin-top: 15px; display: flex; gap: 10px; align-items: center; } /* Changed class name */
-.form-actions select { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;} /* Changed class name */
+.form-actions { margin-top: 15px; display: flex; gap: 10px; align-items: center; } 
+.form-actions select { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;}
