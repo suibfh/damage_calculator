@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Element Selectors
     const inputForm = document.getElementById('inputForm');
-    const allInputFields = inputForm.querySelectorAll('input[data-field]'); // Selects all inputs (including hidden) with data-field within the form
-    const radioButtons = inputForm.querySelectorAll('.btn-radio'); // Select all radio buttons within the form
+    const allInputFields = inputForm.querySelectorAll('input[data-field]');
+    const radioButtons = inputForm.querySelectorAll('.btn-radio');
     const pmButtons = inputForm.querySelectorAll('.pm-btn');
     const buffButtons = inputForm.querySelectorAll('.buff-btn');
-    const actionButtons = document.querySelectorAll('.js-action-btn'); // These might be outside the form
+    const actionButtons = document.querySelectorAll('.js-action-btn');
 
     const formModal = document.getElementById('formModal');
     const formNameInput = document.getElementById('formNameInput');
@@ -18,14 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
         static getFormData() {
             const data = {};
             allInputFields.forEach(input => {
-                if (input.dataset.field) { // Ensure input has data-field attribute
+                if (input.dataset.field) {
                     if (input.type === 'number') {
                         data[input.dataset.field] = parseFloat(input.value) || 0;
-                    } else if (input.type === 'hidden') { // Hidden inputs for radio buttons
-                        // Value is already set by radio button click. parseFloat handles string values.
-                        // Default values (e.g., for fieldname22 if NaN) are handled in the Calculator class.
+                    } else if (input.type === 'hidden') {
                         data[input.dataset.field] = parseFloat(input.value);
-                    } else { // Other types like text (currently not used for calculation fields)
+                    } else {
                         data[input.dataset.field] = input.value;
                     }
                 }
@@ -38,13 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fieldName = input.dataset.field;
                 if (fieldName && dataToLoad.hasOwnProperty(fieldName)) {
                     input.value = dataToLoad[fieldName];
-
-                    // If it's a hidden input for a radio group, update active button
                     if (input.type === 'hidden') {
                         const radioGroup = inputForm.querySelector(`.radio-button-group[data-radio-group-field="${fieldName}"]`);
                         if (radioGroup) {
                             radioGroup.querySelectorAll('.btn-radio').forEach(radio => {
-                                // Compare dataset.value (string) with the loaded data (might be number, convert to string for comparison)
                                 radio.classList.toggle('active', radio.dataset.value === String(dataToLoad[fieldName]));
                             });
                         }
@@ -63,22 +58,21 @@ document.addEventListener('DOMContentLoaded', () => {
         static resetForm() {
             allInputFields.forEach(input => {
                 const field = input.dataset.field;
-                if (!field) return; // Skip if no data-field
+                if (!field) return;
 
                 if (input.type === 'number') {
-                    if (field === 'fieldname14' || field === 'fieldname15') { // 攻撃倍率, 魔攻倍率
+                    if (field === 'fieldname14' || field === 'fieldname15') {
                         input.value = '100';
-                    } else if (field === 'fieldname29') { // 全体BB発動HP
+                    } else if (field === 'fieldname29') {
                         input.value = '30';
-                    } else if (field === 'fieldname41') { // 最大HP
-                        input.value = ''; // Empty
+                    } else if (field === 'fieldname41') {
+                        input.value = '';
                     } else {
                         input.value = '0';
                     }
-                } else if (input.type === 'hidden') { // Radio button groups' hidden inputs
-                    const defaultValue = field === 'fieldname22' ? '1' : '0'; // fieldname22 default 1, others 0
+                } else if (input.type === 'hidden') {
+                    const defaultValue = field === 'fieldname22' ? '1' : '0';
                     input.value = defaultValue;
-                    // Update active state of corresponding radio buttons
                     const radioGroup = inputForm.querySelector(`.radio-button-group[data-radio-group-field="${field}"]`);
                     if (radioGroup) {
                         radioGroup.querySelectorAll('.btn-radio').forEach(radioBtn => {
@@ -109,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         static populateFormList() {
             const forms = FormStorage.getAllForms();
-            formListSelect.innerHTML = '<option value="">保存データを選択</option>'; // Initialize dropdown
+            formListSelect.innerHTML = '<option value="">保存データを選択</option>';
             forms.forEach(form => {
                 const option = document.createElement('option');
                 option.value = form.name;
@@ -120,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     class FormStorage {
-        static STORAGE_KEY = 'bfhCalcForms_v20250514'; // Unique key for this version's storage
+        static STORAGE_KEY = 'bfhCalcForms_v20250514'; // Maintaining this key
 
         static getAllForms() {
             const forms = localStorage.getItem(FormStorage.STORAGE_KEY);
@@ -135,9 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const forms = FormStorage.getAllForms();
             const existingIndex = forms.findIndex(form => form.name === name);
             if (existingIndex > -1) {
-                forms[existingIndex].data = data; // Update existing
+                forms[existingIndex].data = data;
             } else {
-                forms.push({ name, data }); // Add new
+                forms.push({ name, data });
             }
             localStorage.setItem(FormStorage.STORAGE_KEY, JSON.stringify(forms));
             return true;
@@ -146,15 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
         static loadForm(name) {
             const forms = FormStorage.getAllForms();
             const formData = forms.find(form => form.name === name);
-            return formData ? formData.data : null; // Return only the data part
+            return formData ? formData.data : null;
         }
 
         static deleteForm(name) {
             let forms = FormStorage.getAllForms();
             forms = forms.filter(form => form.name !== name);
             localStorage.setItem(FormStorage.STORAGE_KEY, JSON.stringify(forms));
-            UIManager.populateFormList(); // Refresh list after deletion
-            // If the deleted form was selected, reset the select element
+            UIManager.populateFormList();
             if (formListSelect.value === name) {
                  formListSelect.value = "";
             }
@@ -166,33 +159,32 @@ document.addEventListener('DOMContentLoaded', () => {
         static calculateAndDisplay() {
             const data = UIManager.getFormData();
 
-            // Parse values, providing defaults if NaN or not present
-            const fieldname2 = parseFloat(data.fieldname2) || 0;  // 攻撃(基礎ステ)
-            const fieldname3 = parseFloat(data.fieldname3) || 0;  // 魔攻(基礎ステ)
-            const fieldname6 = parseFloat(data.fieldname6) || 0;  // 攻撃バフ
-            const fieldname7 = parseFloat(data.fieldname7) || 0;  // 魔攻バフ
-            const fieldname10 = parseFloat(data.fieldname10) || 0; // 攻撃ダウン
-            const fieldname11 = parseFloat(data.fieldname11) || 0; // 魔攻ダウン
-            const fieldname4 = parseFloat(data.fieldname4) || 0;  // 防御
-            const fieldname5 = parseFloat(data.fieldname5) || 0;  // 魔防
-            const fieldname8 = parseFloat(data.fieldname8) || 0;  // 防御アップ
-            const fieldname9 = parseFloat(data.fieldname9) || 0;  // 魔防アップ
-            const fieldname12 = parseFloat(data.fieldname12) || 0; // 防御ダウン
-            const fieldname13 = parseFloat(data.fieldname13) || 0; // 魔防ダウン
-            const fieldname14 = parseFloat(data.fieldname14) || 0; // 攻撃倍率
-            const fieldname15 = parseFloat(data.fieldname15) || 0; // 魔攻倍率
+            const fieldname2 = parseFloat(data.fieldname2) || 0;
+            const fieldname3 = parseFloat(data.fieldname3) || 0;
+            const fieldname6 = parseFloat(data.fieldname6) || 0;
+            const fieldname7 = parseFloat(data.fieldname7) || 0;
+            const fieldname10 = parseFloat(data.fieldname10) || 0;
+            const fieldname11 = parseFloat(data.fieldname11) || 0;
+            const fieldname4 = parseFloat(data.fieldname4) || 0;
+            const fieldname5 = parseFloat(data.fieldname5) || 0;
+            const fieldname8 = parseFloat(data.fieldname8) || 0;
+            const fieldname9 = parseFloat(data.fieldname9) || 0;
+            const fieldname12 = parseFloat(data.fieldname12) || 0;
+            const fieldname13 = parseFloat(data.fieldname13) || 0;
+            const fieldname14 = parseFloat(data.fieldname14) || 0;
+            const fieldname15 = parseFloat(data.fieldname15) || 0;
 
-            const fieldname18 = parseFloat(data.fieldname18) || 0; // 弱ダメアップ
-            const fieldname17 = parseFloat(data.fieldname17) || 0; // 弱ダメ軽減 (数値入力)
-            const fieldname16 = parseFloat(data.fieldname16) || 0; // 属性軽減 (スキル・BB)
-            const fieldname19 = parseFloat(data.fieldname19) || 0; // 被状態異常ダメアップ (ラジオボタン)
-            const fieldname50 = parseFloat(data.fieldname50) || 0; // 属性軽減 (特性) (ラジオボタン)
-            const fieldname22 = parseFloat(data.fieldname22) || 1;  // 属性相性 (ラジオボタン, default 1)
-            const fieldname20 = parseFloat(data.fieldname20) || 0; // BBダメアップ
-            const fieldname29_val = parseFloat(data.fieldname29) || 0; // 全体BB発動HP
-            const maxHP = parseFloat(data.fieldname41) || 0;           // 最大HP
+            const fieldname18 = parseFloat(data.fieldname18) || 0;
+            const fieldname17 = parseFloat(data.fieldname17) || 0;
+            const fieldname16 = parseFloat(data.fieldname16) || 0;
+            const fieldname19 = parseFloat(data.fieldname19) || 0;
+            const fieldname50 = parseFloat(data.fieldname50) || 0;
+            const fieldname22 = parseFloat(data.fieldname22) || 1;  // Radio button, default 1
+            const fieldname20 = parseFloat(data.fieldname20) || 0;
+            const fieldname29_val = parseFloat(data.fieldname29) || 0;
+            const maxHP = parseFloat(data.fieldname41) || 0;
 
-            // 攻撃ダメージ計算 (fieldname37)
+            // Physical Damage Calculation (Floored)
             let baseAtkCalc = (fieldname2 * (1 + fieldname6/100 - fieldname10/100)) - (fieldname4/2 * (1 + fieldname8/100 - fieldname12/100));
             let physicalDamage = Math.floor(
                 Math.max(
@@ -202,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             if (isNaN(physicalDamage) || !isFinite(physicalDamage)) physicalDamage = 0;
 
-            // 魔攻ダメージ計算 (fieldname38)
+            // Magical Damage Calculation (Floored)
             let baseMagCalc = (fieldname3 * (1 + fieldname7/100 - fieldname11/100)) - (fieldname5/2 * (1 + fieldname9/100 - fieldname13/100));
             let magicalDamage = Math.floor(
                 Math.max(
@@ -212,64 +204,67 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             if (isNaN(magicalDamage) || !isFinite(magicalDamage)) magicalDamage = 0;
             
-            // 総合ダメージ計算 (fieldname1)
-            let elementalFactor = fieldname22 + fieldname18/100 - fieldname17/100; // fieldname17 is % from number input
+            // Damage Modifiers
+            let elementalFactor = fieldname22 + fieldname18/100 - fieldname17/100;
             let skillElementalResistanceFactor = 1 - fieldname16/100;
             let statusRelatedDamageFactor = 1 + fieldname19/100 - fieldname50/100;
             let bbDamageUpFactor = 1 + fieldname20/100;
 
+            // Total Damage Calculation (pre-rounding/flooring specific to this version)
             let damageBeforeBBUp = (physicalDamage + magicalDamage) * elementalFactor * skillElementalResistanceFactor;
             damageBeforeBBUp = damageBeforeBBUp * statusRelatedDamageFactor;
             
             let totalDamage = Math.floor(damageBeforeBBUp) * bbDamageUpFactor;
             if (isNaN(totalDamage) || !isFinite(totalDamage)) totalDamage = 0;
             
-            totalDamage = Math.floor(totalDamage); // 総合ダメージを切り捨て整数化
+            // --- Restored Decimal Handling for Display ---
+            UIManager.setResult('fieldname37', physicalDamage.toLocaleString()); // Already floored
+            UIManager.setResult('fieldname38', magicalDamage.toLocaleString()); // Already floored
+            
+            // Total Damage Display (allows 1 decimal place if not integer)
+            const totalDamageDisplay = Number.isInteger(totalDamage) 
+                ? totalDamage.toLocaleString() 
+                : parseFloat(totalDamage.toFixed(1)).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1});
+            UIManager.setResult('fieldname1', totalDamageDisplay);
 
-            // 結果表示
-            UIManager.setResult('fieldname37', physicalDamage.toLocaleString()); // 切り捨て済み
-            UIManager.setResult('fieldname38', magicalDamage.toLocaleString()); // 切り捨て済み
-            UIManager.setResult('fieldname1', totalDamage.toLocaleString());    // 切り捨て済み
-
-            // HP上限目安 (fieldname30)
+            // HP Threshold Calculation (Rounded)
             let hpThresholdBasis = 100 - fieldname29_val;
             let hpThreshold = 0;
-            if (totalDamage > 0 && hpThresholdBasis > 0) { // Ensure totalDamage is positive for meaningful calculation
-                hpThreshold = Math.floor(totalDamage * 100 / hpThresholdBasis); // 切り捨てに変更
+            if (totalDamage > 0 && hpThresholdBasis > 0) {
+                hpThreshold = Math.round(totalDamage * 100 / hpThresholdBasis); // Using Math.round as per "1 step before" logic
             }
             if (isNaN(hpThreshold) || !isFinite(hpThreshold)) hpThreshold = 0;
-            UIManager.setResult('fieldname30', hpThreshold.toLocaleString()); // 切り捨て済み
+            UIManager.setResult('fieldname30', hpThreshold.toLocaleString());
 
-            // ダメージ割合(%) (fieldname42)
+            // Damage Percentage (allows 2 decimal places)
             let damagePercentage = 0;
-            if (maxHP > 0 && totalDamage >= 0) { // totalDamage can be 0
+            if (maxHP > 0 && totalDamage >= 0) {
                  damagePercentage = (totalDamage / maxHP * 100);
             }
             if (isNaN(damagePercentage) || !isFinite(damagePercentage)) damagePercentage = 0;
-            UIManager.setResult('fieldname42', damagePercentage.toFixed(2)); // 小数点2位まで表示
+            UIManager.setResult('fieldname42', damagePercentage.toFixed(2));
         }
     }
 
     // Event Listeners Setup
     allInputFields.forEach(input => {
-        if(input.dataset.field) { // Ensure event listeners are only for data fields
+        if(input.dataset.field) {
             input.addEventListener('input', Calculator.calculateAndDisplay);
-            input.addEventListener('change', Calculator.calculateAndDisplay); // For number fields losing focus
+            input.addEventListener('change', Calculator.calculateAndDisplay);
         }
     });
 
-    radioButtons.forEach(button => { // radioButtons are individual <button class="btn-radio">
+    radioButtons.forEach(button => {
         button.addEventListener('click', () => {
-            const groupContainer = button.closest('.radio-button-group'); // Find parent container
+            const groupContainer = button.closest('.radio-button-group');
             if (groupContainer) {
-                const groupName = groupContainer.dataset.radioGroupField; // Get field name from parent
-                const hiddenInput = inputForm.querySelector(`#${groupName}`); // Find hidden input by ID within the form
+                const groupName = groupContainer.dataset.radioGroupField;
+                const hiddenInput = inputForm.querySelector(`#${groupName}`);
                 if (hiddenInput) {
-                    hiddenInput.value = button.dataset.value; // Set hidden input value from button's data-value
-                    // Update active class for visual feedback within this group
+                    hiddenInput.value = button.dataset.value;
                     groupContainer.querySelectorAll('.btn-radio').forEach(rb => rb.classList.remove('active'));
                     button.classList.add('active');
-                    Calculator.calculateAndDisplay(); // Recalculate
+                    Calculator.calculateAndDisplay();
                 }
             }
         });
@@ -279,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             const targetId = button.dataset.target;
             const step = parseFloat(button.dataset.step);
-            const targetInput = inputForm.querySelector(`#${targetId}`); // Search within the form
+            const targetInput = inputForm.querySelector(`#${targetId}`);
             if (targetInput) {
                 let currentValue = parseFloat(targetInput.value) || 0;
                 targetInput.value = currentValue + step;
@@ -292,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             const targetId = button.dataset.target;
             const value = parseFloat(button.dataset.value);
-            const targetInput = inputForm.querySelector(`#${targetId}`); // Search within the form
+            const targetInput = inputForm.querySelector(`#${targetId}`);
             if (targetInput) {
                 targetInput.value = value;
                 Calculator.calculateAndDisplay();
@@ -321,8 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (name) {
             const dataToSave = UIManager.getFormData();
             if (FormStorage.saveForm(name, dataToSave)) {
-                UIManager.populateFormList(); // Refresh dropdown
-                formNameInput.value = ''; // Clear input after save
+                UIManager.populateFormList();
+                formNameInput.value = '';
                 alert('フォーム「' + name + '」を保存/更新しました。');
             }
         } else {
@@ -336,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = FormStorage.loadForm(name);
             if (formData) {
                 UIManager.setFormData(formData);
-                Calculator.calculateAndDisplay(); // Recalculate with loaded data
+                Calculator.calculateAndDisplay();
                 UIManager.closeFormModal();
             } else {
                 alert('選択されたフォームの読み込みに失敗しました。');
@@ -350,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = formListSelect.value;
         if (name) {
             if (confirm('フォーム「' + name + '」を削除してもよろしいですか？')) {
-                FormStorage.deleteForm(name); // This will also refresh the list
+                FormStorage.deleteForm(name);
                 alert('フォーム「' + name + '」を削除しました。');
             }
         } else {
@@ -359,6 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Initial Setup ---
-    UIManager.populateFormList(); // Populate profile list on load
-    UIManager.resetForm(); // Reset form to default values and perform initial calculation
+    UIManager.populateFormList();
+    UIManager.resetForm();
 });
